@@ -1,0 +1,45 @@
+variables:
+  TEMPLATE_VERSION: "v1"
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - when: always
+
+delivery-pipeline:
+  variables:
+    PUSH_LATEST: "true"
+  trigger:
+    strategy: depend
+    include:
+      - project: "devops-pipelines/pipeline-triggers"
+        ref: ${TEMPLATE_VERSION}
+        file: "delivery.yaml"
+
+grype-smoke-test:
+  variables:
+    APP_IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
+    APP_IMAGE_SRC: ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}
+    APP_IMAGE: ${APP_IMAGE_SRC}:${APP_IMAGE_TAG}
+  image: ${APP_IMAGE}
+  needs: [ "delivery-pipeline" ]
+  services:
+    - name: artifactory.cloud.cms.gov/batcave-docker/devops-pipelines/pipeline-tools/grype-cache-server:latest
+      alias: vul-server
+  script:
+    - curl -LO vul-server/vulndb.tar.gz
+    - grype db import vulndb.tar.gz
+    - grype db check
+    - grype bkimminich/juice-shop -o json --file report.json
+    - cat report.json | jq .
+
+release-pipeline:
+  trigger:
+    strategy: depend
+    include:
+      - project: "devops-pipelines/pipeline-triggers"
+        ref: ${TEMPLATE_VERSION}
+        file: "release.yaml"
+  rules:
+    - if: $CI_COMMIT_TAG
