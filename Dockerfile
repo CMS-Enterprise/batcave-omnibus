@@ -17,11 +17,11 @@ RUN apk --no-cache add ca-certificates git openssh && \
 
 FROM alpine:3.18.2
 
-COPY --from=build /root/go/bin/grype /usr/local/bin/grype
-COPY --from=build /root/go/bin/syft /usr/local/bin/syft
-COPY --from=build /root/go/bin/gitleaks /usr/local/bin/gitleaks
-COPY --from=build /root/go/bin/cosign /usr/local/bin/cosign
-COPY --from=build /root/go/bin/crane /usr/local/bin/crane
-COPY --from=build /root/go/bin/release-cli /usr/local/bin/release-cli
+COPY --from=build /go/bin/grype /usr/local/bin/grype
+COPY --from=build /go/bin/syft /usr/local/bin/syft
+COPY --from=build /go/bin/gitleaks /usr/local/bin/gitleaks
+COPY --from=build /go/bin/cosign /usr/local/bin/cosign
+COPY --from=build /go/bin/crane /usr/local/bin/crane
+COPY --from=build /go/bin/release-cli /usr/local/bin/release-cli
 
 
