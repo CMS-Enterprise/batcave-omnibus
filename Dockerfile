@@ -11,7 +11,7 @@ RUN apk --no-cache add ca-certificates git openssh && \
   go install github.com/anchore/grype/cmd/grype@$GRYPE_VERSION && \
   go install github.com/anchore/syft/cmd/syft@$SYFT_VERSION && \
   go install github.com/zricethezav/gitleaks/v8@$GITLEAKS_VERSION && \
-  go install github.com/sigstore/cosign/cmd/cosign@$COSIGN_VERSION && \
+  go install github.com/sigstore/cosign/v2/cmd/cosign@$COSIGN_VERSION && \
   go install github.com/google/go-containerregistry/cmd/crane@CRANE_VERSION && \
   go install gitlab.com/gitlab-org/release-cli/cmd/release-cli@RELEASE_CLI_VERSION
 
