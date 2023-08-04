@@ -1,12 +1,6 @@
 variables:
   TEMPLATE_VERSION: "v1"
 
-workflow:
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    - when: always
-
 delivery-pipeline:
   variables:
     PUSH_LATEST: "true"
@@ -33,6 +27,7 @@ grype-smoke-test:
     - grype db check
     - grype bkimminich/juice-shop -o json --file report.json
     - cat report.json | jq .
+
 
 release-pipeline:
   trigger:
