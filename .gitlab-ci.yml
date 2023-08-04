@@ -51,6 +51,7 @@ juice-shop-clone:
     paths:
       - "juice-shop"
   script:
+    - git config --global --add safe.directory *
     - git clone https://github.com/juice-shop/juice-shop.git
 
 gitleaks-smoke-test:
