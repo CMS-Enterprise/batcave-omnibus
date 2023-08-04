@@ -1,7 +1,13 @@
+stages:
+  - build
+  - test
+  - release
+
 variables:
   TEMPLATE_VERSION: "v1"
 
 delivery-pipeline:
+  stage: build
   variables:
     PUSH_LATEST: "true"
   trigger:
@@ -12,7 +18,7 @@ delivery-pipeline:
         file: "delivery.yaml"
 
 .with-current-image:
-  needs: [ "delivery-pipeline" ]
+  stage: test
   image: ${APP_IMAGE}
   variables:
     APP_IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
@@ -76,6 +82,7 @@ release-tool-smoke-test:
     - release-cli help
 
 release-pipeline:
+  stage: release
   trigger:
     strategy: depend
     include:
