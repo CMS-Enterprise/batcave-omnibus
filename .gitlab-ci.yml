@@ -44,20 +44,12 @@ syft-smoke-test:
     - syft artifactory.cloud.cms.gov/docker/alpine:latest --scope=AllLayers -o cyclonedx-json --file ${IMAGE_SBOM}
     - cat ${IMAGE_SBOM}
 
-juice-shop-clone:
-  image: artifactory.cloud.cms.gov/docker/alpine/git:latest
-  artifacts:
-    expire_in: "1 day"
-    paths:
-      - "juice-shop"
-  script:
-    - git config --global --add safe.directory '*' 
-    - git clone https://github.com/juice-shop/juice-shop.git
-
 gitleaks-smoke-test:
   extends: .with-current-image
   needs: [ "delivery-pipeline", "juice-shop-clone" ]
   script:
+    - git config --global --add safe.directory '*'
+    - git clone https://github.com/juice-shop/juice-shop.git
     - mkdir -p $ARTIFACT_FOLDER/gitleaks
     - touch ${GITLEAKS_REPORT}
     - echo "Starting Gitleaks Secrets Scan"
