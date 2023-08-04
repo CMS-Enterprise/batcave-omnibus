@@ -11,13 +11,20 @@ delivery-pipeline:
         ref: ${TEMPLATE_VERSION}
         file: "delivery.yaml"
 
-grype-smoke-test:
+.with-current-image:
+  needs: [ "delivery-pipeline" ]
+  image: ${APP_IMAGE}
   variables:
     APP_IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
     APP_IMAGE_SRC: ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}
     APP_IMAGE: ${APP_IMAGE_SRC}:${APP_IMAGE_TAG}
-  image: ${APP_IMAGE}
-  needs: [ "delivery-pipeline" ]
+    GITLEAKS_REPORT: $ARTIFACT_FOLDER/gitleaks/gitleaks_report.json
+    COSIGN_EXPERIMENTAL: 1
+  before_script:
+    - mkdir ~/.docker && echo $BC_ARTIFACTORY_AUTH_JSON >> ~/.docker/config.json
+
+grype-smoke-test:
+  extends: .with-current-image
   services:
     - name: artifactory.cloud.cms.gov/batcave-docker/devops-pipelines/pipeline-tools/grype-cache-server:latest
       alias: vul-server
@@ -28,6 +35,42 @@ grype-smoke-test:
     - grype bkimminich/juice-shop -o json --file report.json
     - cat report.json | jq .
 
+syft-smoke-test:
+  extends: .with-current-image
+  script:
+    - syft version
+    - syft artifactory.cloud.cms.gov/docker/alpine:latest --scope=AllLayers -o cyclonedx-json --file ${IMAGE_SBOM}
+    - cat ${IMAGE_SBOM}
+
+gitleaks-smoke-test:
+  extends: .with-current-image
+  script:
+    - mkdir -p $ARTIFACT_FOLDER/gitleaks
+    - touch ${GITLEAKS_REPORT}
+    - git clone https://github.com/juice-shop/juice-shop.git
+    - echo "Starting Gitleaks Secrets Scan"
+    - gitleaks detect --exit-code 0 --verbose --source juice-shop --report-format json --report-path ${GITLEAKS_REPORT}
+
+cosign-crane-smoke-test:
+  extends: .with-current-image
+  script:
+    - cosign version
+    - crane version
+    - export TARGET_IMAGE=$(crane digest --full-ref ${APP_IMAGE})
+    - echo "Application Image Digest -> ${TARGET_IMAGE}"
+    - echo "Signing image using cosign with OIDC token"
+    - cosign sign --identity-token=$(cat /var/run/secrets/eks.amazonaws.com/serviceaccount/token) ${TARGET_IMAGE}
+
+gatecheck-smoke-test:
+  extends: .with-current-image
+  script:
+    - gatecheck version
+    - gatecheck config info
+
+release-tool-smoke-test:
+  extends: .with-current-image
+  script:
+    - release-cli help
 
 release-pipeline:
   trigger:
