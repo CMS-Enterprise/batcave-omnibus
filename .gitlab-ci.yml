@@ -18,7 +18,9 @@ delivery-pipeline:
     APP_IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
     APP_IMAGE_SRC: ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}
     APP_IMAGE: ${APP_IMAGE_SRC}:${APP_IMAGE_TAG}
-    GITLEAKS_REPORT: $ARTIFACT_FOLDER/gitleaks/gitleaks_report.json
+    ARTIFACT_FOLDER: ".artifacts"
+    GITLEAKS_REPORT: ${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json
+    IMAGE_SBOM: ${ARTIFACT_FOLDER}/sbom/sbom.json
     COSIGN_EXPERIMENTAL: 1
   before_script:
     - mkdir ~/.docker && echo $BC_ARTIFACTORY_AUTH_JSON >> ~/.docker/config.json
@@ -42,12 +44,21 @@ syft-smoke-test:
     - syft artifactory.cloud.cms.gov/docker/alpine:latest --scope=AllLayers -o cyclonedx-json --file ${IMAGE_SBOM}
     - cat ${IMAGE_SBOM}
 
+juice-shop-clone:
+  image: artifactory.cloud.cms.gov/docker/alpine/git:latest
+  artifacts:
+    expire_in: "1 day"
+    paths:
+      - "juice-shop"
+  script:
+    - git clone https://github.com/juice-shop/juice-shop.git
+
 gitleaks-smoke-test:
   extends: .with-current-image
+  needs: [ "delivery-pipeline", "juice-shop-clone" ]
   script:
     - mkdir -p $ARTIFACT_FOLDER/gitleaks
     - touch ${GITLEAKS_REPORT}
-    - git clone https://github.com/juice-shop/juice-shop.git
     - echo "Starting Gitleaks Secrets Scan"
     - gitleaks detect --exit-code 0 --verbose --source juice-shop --report-format json --report-path ${GITLEAKS_REPORT}
 
