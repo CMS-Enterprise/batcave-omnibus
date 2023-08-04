@@ -31,7 +31,7 @@ delivery-pipeline:
   before_script:
     - mkdir ~/.docker && echo $BC_ARTIFACTORY_AUTH_JSON >> ~/.docker/config.json
 
-grype-smoke-test:
+grype:
   extends: .with-current-image
   services:
     - name: artifactory.cloud.cms.gov/batcave-docker/devops-pipelines/pipeline-tools/grype-cache-server:latest
@@ -43,14 +43,14 @@ grype-smoke-test:
     - grype bkimminich/juice-shop -o json --file report.json
     - cat report.json | jq .
 
-syft-smoke-test:
+syft:
   extends: .with-current-image
   script:
     - syft version
     - syft artifactory.cloud.cms.gov/docker/alpine:latest --scope=AllLayers -o cyclonedx-json --file ${IMAGE_SBOM}
     - cat ${IMAGE_SBOM}
 
-gitleaks-smoke-test:
+gitleaks:
   extends: .with-current-image
   script:
     - git config --global --add safe.directory '*'
@@ -60,7 +60,7 @@ gitleaks-smoke-test:
     - echo "Starting Gitleaks Secrets Scan"
     - gitleaks detect --exit-code 0 --verbose --source juice-shop --report-format json --report-path ${GITLEAKS_REPORT}
 
-cosign-crane-smoke-test:
+cosign-crane:
   extends: .with-current-image
   script:
     - cosign version
@@ -70,13 +70,13 @@ cosign-crane-smoke-test:
     - echo "Signing image using cosign with OIDC token"
     - cosign sign --identity-token=$(cat /var/run/secrets/eks.amazonaws.com/serviceaccount/token) ${TARGET_IMAGE}
 
-gatecheck-smoke-test:
+gatecheck:
   extends: .with-current-image
   script:
     - gatecheck version
     - gatecheck config info
 
-release-tool-smoke-test:
+release-tool:
   extends: .with-current-image
   script:
     - release-cli help
