@@ -46,7 +46,6 @@ syft-smoke-test:
 
 gitleaks-smoke-test:
   extends: .with-current-image
-  needs: [ "delivery-pipeline", "juice-shop-clone" ]
   script:
     - git config --global --add safe.directory '*'
     - git clone https://github.com/juice-shop/juice-shop.git
