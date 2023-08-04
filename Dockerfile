@@ -19,7 +19,7 @@ RUN apk --no-cache add ca-certificates git openssh && \
 
 FROM alpine:3.18.2
 
-RUN apk add curl jq sqlite-libs
+RUN apk add curl jq sqlite-libs git
 
 COPY --from=build /go/bin/grype /usr/local/bin/grype
 COPY --from=build /go/bin/syft /usr/local/bin/syft
