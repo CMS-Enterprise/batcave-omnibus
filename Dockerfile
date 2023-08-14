@@ -1,3 +1,5 @@
+FROM golang:alpine3.18 as build
+
 ARG GRYPE_VERSION=v0.65.1
 ARG SYFT_VERSION=v0.86.1
 ARG GITLEAKS_VERSION=v8.17.0
@@ -5,8 +7,6 @@ ARG COSIGN_VERSION=v2.1.1
 ARG CRANE_VERSION=v0.15.2
 ARG RELEASE_CLI_VERSION=v0.15.0
 ARG GATECHECK_VERSION=v0.1.2
-
-FROM golang:alpine3.18 as build
 
 RUN apk --no-cache add ca-certificates git openssh && \
   go install github.com/anchore/grype/cmd/grype@${GRYPE_VERSION} && \
