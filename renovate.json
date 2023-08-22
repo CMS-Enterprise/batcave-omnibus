@@ -1,0 +1,27 @@
+{
+  "dockerfile": {
+    "fileMatch": ["^Dockerfile$"]
+  },
+  "packageRules": [
+    {
+      "matchManagers": ["dockerfile"],
+      "enabled": true
+    },
+    {
+      "matchManagers": ["gomod"],
+      "enabled": false
+    }
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": [
+        "FROM golang:alpine(?<currentValue>\\S+)",
+        "FROM alpine:(?<currentValue>\\S+)"
+      ],
+      "depNameTemplate": "registry.hub.docker.com/library/{{depName}}",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "regex:^(?<major>\\d+)(?<compatibility>\\d+\\.\\d+)"
+    }
+  ]
+}
