@@ -22,7 +22,7 @@
       "depNameTemplate": "registry.hub.docker.com/library/{{depName}}",
       "datasourceTemplate": "docker",
       "versioningTemplate": "regex:^(?<major>\\d+)(?<compatibility>\\d+\\.\\d+)"
-    }
+    },
     {
         "fileMatch": ["^Dockerfile$"],
         "matchStrings": ["ARG GRYPE_VERSION=(?<currentValue>\\S+)"],
