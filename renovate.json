@@ -21,6 +21,14 @@
       "groupName": "gomod dependencies",
       "groupSlug": "gomod",
       "enabled": false
+    },
+    {
+      "matchManagers": [
+        "dockerfile", "gomod"
+        ],
+      "groupName": "gomod, and docker dependencies",
+      "groupSlug": "all",
+      "enabled": false
     }
   ],
   "regexManagers": [
