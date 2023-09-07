@@ -86,7 +86,7 @@
       },
       {
         "fileMatch": ["^Dockerfile$"],
-        "matchStrings": ["ARG VERSION=(?<currentValue>\\S+)"],
+        "matchStrings": ["ARG GATECHECK_VERSION=(?<currentValue>\\S+)"],
         "depNameTemplate": "gatecheckdev/gatecheck",
         "datasourceTemplate": "github-tags",
         "versioningTemplate": "regex:^(?<compatibility>.*)(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)"
