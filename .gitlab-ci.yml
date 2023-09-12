@@ -4,7 +4,7 @@ stages:
   - release
 
 variables:
-  TEMPLATE_VERSION: "v1"
+  TEMPLATE_VERSION: "main"
 
 delivery-pipeline:
   stage: build
