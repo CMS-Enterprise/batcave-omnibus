@@ -40,10 +40,10 @@ RUN addgroup omnibus && adduser \
     --gecos "" \
     --home "$(pwd)" \
     --ingroup "$USER" \
-    --no-create-home \
     --uid "$UID" \
     "$USER" && \
-	chown -R omnibus:omnibus /usr/local/bin/
+	chown -R omnibus:omnibus /usr/local/bin/ && \
+	chown -R omnibus:omnibus /app
 
 COPY --from=build /go/bin/grype /usr/local/bin/grype
 COPY --from=build /go/bin/syft /usr/local/bin/syft
