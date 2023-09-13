@@ -29,6 +29,22 @@ RUN apk --no-cache add curl jq sqlite-libs git
 # Final Image
 FROM add-deps 
 
+ENV USER=omnibus
+ENV UID=12345
+ENV GID=23456
+
+WORKDIR /app
+
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "$(pwd)" \
+    --ingroup "$USER" \
+    --no-create-home \
+    --uid "$UID" \
+    "$USER" && \
+	chown -R omnibus:omnibus /usr/local/bin/
+
 COPY --from=build /go/bin/grype /usr/local/bin/grype
 COPY --from=build /go/bin/syft /usr/local/bin/syft
 COPY --from=build /go/bin/gitleaks /usr/local/bin/gitleaks
@@ -37,3 +53,11 @@ COPY --from=build /go/bin/crane /usr/local/bin/crane
 COPY --from=build /go/bin/release-cli /usr/local/bin/release-cli
 COPY --from=build /go/bin/gatecheck /usr/local/bin/gatecheck
 
+USER omnibus
+
+LABEL org.opencontainers.image.title="omnibus"
+LABEL org.opencontainers.image.description="A collection of CI/CD tools for batCAVE"
+LABEL org.opencontainers.image.vendor="nightwing"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
+LABEL io.artifacthub.package.readme-url="https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/blob/main/README.md"
+LABEL io.artifacthub.package.license="Apache-2.0"
