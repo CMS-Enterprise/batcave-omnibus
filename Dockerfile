@@ -35,7 +35,7 @@ ENV GID=23456
 
 WORKDIR /app
 
-RUN adduser \
+RUN add group omnibus && adduser \
     --disabled-password \
     --gecos "" \
     --home "$(pwd)" \
