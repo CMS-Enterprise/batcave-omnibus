@@ -90,6 +90,13 @@
         "depNameTemplate": "gatecheckdev/gatecheck",
         "datasourceTemplate": "github-tags",
         "versioningTemplate": "regex:^(?<compatibility>.*)(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)"
+      },
+      {
+        "fileMatch": ["^Dockerfile$"],
+        "matchStrings": ["ARG OMNIBUS_VERSION=(?<currentValue>\\S+)"],
+        "depNameTemplate": "devops-pipelines/pipeline-tools/omnibus",
+        "datasourceTemplate": "github-tags",
+        "versioningTemplate": "regex:^(?<compatibility>.*)(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)"
       }
   ]
 }
