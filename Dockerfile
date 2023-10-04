@@ -15,35 +15,35 @@ RUN apk --no-cache add ca-certificates git openssh make
 WORKDIR /app
 
 # Layer on purpose for caching improvements
-RUN git clone --branch ${GRYPE_VERSION} --depth 1 https://github.com/anchore/grype
-WORKDIR /app/grype
-RUN go build -ldflags="-w -s -extldflags '-static' -X 'main.version=${GRYPE_VERSION}' -X 'main.gitCommit=$(git rev-parse HEAD)' -X 'main.buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)' -X 'main.gitDescription=$(git log -1 --pretty=%B)'" -o /usr/local/bin ./cmd/grype
+RUN git clone --branch ${GRYPE_VERSION} --depth=1 --single-branch https://github.com/anchore/grype /app/grype
+RUN cd /app/grype && \
+    go build -ldflags="-w -s -extldflags '-static' -X 'main.version=${GRYPE_VERSION}' -X 'main.gitCommit=$(git rev-parse HEAD)' -X 'main.buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)' -X 'main.gitDescription=$(git log -1 --pretty=%B)'" -o /usr/local/bin ./cmd/grype
     
-RUN git clone --branch ${SYFT_VERSION} --depth 1 https://github.com/anchore/syft
-WORKDIR /app/syft 
-RUN go build -ldflags="-w -s -extldflags '-static' -X 'main.version=${SYFT_VERSION}' -X 'main.gitCommit=$(git rev-parse HEAD)' -X 'main.buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)' -X 'main.gitDescription=$(git log -1 --pretty=%B)'" -o /usr/local/bin ./cmd/syft
+RUN git clone --branch ${SYFT_VERSION} --depth=1 --single-branch https://github.com/anchore/syft /app/syft 
+RUN cd /app/syft && \
+    go build -ldflags="-w -s -extldflags '-static' -X 'main.version=${SYFT_VERSION}' -X 'main.gitCommit=$(git rev-parse HEAD)' -X 'main.buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)' -X 'main.gitDescription=$(git log -1 --pretty=%B)'" -o /usr/local/bin ./cmd/syft
     
-RUN git clone --branch ${GITLEAKS_VERSION} --depth 1 https://github.com/zricethezav/gitleaks
-WORKDIR /app/gitleaks
-RUN go build -ldflags="-s -w -X=github.com/zricethezav/gitleaks/v8/cmd.Version=${GITLEAKS_VERSION}" -o /usr/local/bin .
+RUN git clone --branch ${GITLEAKS_VERSION} --depth=1 --single-branch https://github.com/zricethezav/gitleaks /app/gitleaks
+RUN cd /app/gitleaks && \
+    go build -ldflags="-s -w -X=github.com/zricethezav/gitleaks/v8/cmd.Version=${GITLEAKS_VERSION}" -o /usr/local/bin .
 
-RUN git clone --branch ${COSIGN_VERSION} --depth 1 https://github.com/sigstore/cosign
-WORKDIR /app/cosign
-RUN make cosign && \
+RUN git clone --branch ${COSIGN_VERSION} --depth=1 --single-branch https://github.com/sigstore/cosign /app/cosign
+RUN cd /app/cosign && \
+    make cosign && \
     mv cosign /usr/local/bin
    
-RUN git clone --branch ${CRANE_VERSION} --depth 1 https://github.com/google/go-containerregistry
-WORKDIR /app/go-containerregistry
-RUN go build -ldflags="-s -w -X github.com/google/go-containerregistry/cmd/crane/cmd.Version=${CRANE_VERSION}" -o /usr/local/bin ./cmd/crane
+RUN git clone --branch ${CRANE_VERSION} --depth=1 --single-branch https://github.com/google/go-containerregistry /app/go-containerregistry
+RUN cd go-containerregistry && \
+    go build -ldflags="-s -w -X github.com/google/go-containerregistry/cmd/crane/cmd.Version=${CRANE_VERSION}" -o /usr/local/bin ./cmd/crane
 
-RUN git clone --branch ${RELEASE_CLI_VERSION} --depth 1 https://gitlab.com/gitlab-org/release-cli
-WORKDIR /app/release-cli
-RUN make build && \
+RUN git clone --branch ${RELEASE_CLI_VERSION} --depth=1 --single-branch https://gitlab.com/gitlab-org/release-cli /app/release-cli
+RUN cd release-cli && \
+    make build && \
     mv ./bin/release-cli /usr/local/bin
     
-RUN git clone --branch ${GATECHECK_VERSION} --depth 1 https://github.com/gatecheckdev/gatecheck
-WORKDIR /app/gatecheck
-RUN go build -ldflags="-s -w" -o /usr/local/bin ./cmd/gatecheck
+RUN git clone --branch ${GATECHECK_VERSION} --depth=1 --single-branch https://github.com/gatecheckdev/gatecheck /app/gatecheck
+RUN cd gatecheck && \
+    go build -ldflags="-s -w" -o /usr/local/bin ./cmd/gatecheck
     
 # Final Image
 FROM alpine:latest
