@@ -2,32 +2,53 @@
 
 FROM golang:alpine as build
 
-ARG GRYPE_VERSION=v0.69.0
-ARG SYFT_VERSION=v0.91.0
+ARG GRYPE_VERSION=v0.68.1
+ARG SYFT_VERSION=v0.90.0
 ARG GITLEAKS_VERSION=v8.18.0
 ARG COSIGN_VERSION=v2.2.0
 ARG CRANE_VERSION=v0.16.1
 ARG RELEASE_CLI_VERSION=v0.16.0
-ARG GATECHECK_VERSION=v0.2.2
+ARG GATECHECK_VERSION=v0.2.1
 
-RUN apk --no-cache add ca-certificates git openssh
+RUN apk --no-cache add ca-certificates git openssh make
+
+WORKDIR /app
 
 # Layer on purpose for caching improvements
-RUN go install github.com/anchore/grype/cmd/grype@${GRYPE_VERSION}
-RUN go install github.com/anchore/syft/cmd/syft@${SYFT_VERSION}
-RUN go install github.com/zricethezav/gitleaks/v8@${GITLEAKS_VERSION}
-RUN go install github.com/sigstore/cosign/v2/cmd/cosign@${COSIGN_VERSION}
-RUN go install github.com/google/go-containerregistry/cmd/crane@${CRANE_VERSION}
-RUN go install gitlab.com/gitlab-org/release-cli/cmd/release-cli@${RELEASE_CLI_VERSION}
-RUN go install github.com/gatecheckdev/gatecheck/cmd/gatecheck@${GATECHECK_VERSION}
+RUN git clone --branch ${GRYPE_VERSION} --depth 1 https://github.com/anchore/grype
+WORKDIR /app/grype
+RUN go build -ldflags="-w -s -extldflags '-static' -X 'main.version=${GRYPE_VERSION}' -X 'main.gitCommit=$(git rev-parse HEAD)' -X 'main.buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)' -X 'main.gitDescription=$(git log -1 --pretty=%B)'" -o /usr/local/bin ./cmd/grype
+    
+RUN git clone --branch ${SYFT_VERSION} --depth 1 https://github.com/anchore/syft
+WORKDIR /app/syft 
+RUN go build -ldflags="-w -s -extldflags '-static' -X 'main.version=${SYFT_VERSION}' -X 'main.gitCommit=$(git rev-parse HEAD)' -X 'main.buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)' -X 'main.gitDescription=$(git log -1 --pretty=%B)'" -o /usr/local/bin ./cmd/syft
+    
+RUN git clone --branch ${GITLEAKS_VERSION} --depth 1 https://github.com/zricethezav/gitleaks
+WORKDIR /app/gitleaks
+RUN go build -ldflags="-s -w -X=github.com/zricethezav/gitleaks/v8/cmd.Version=${GITLEAKS_VERSION}" -o /usr/local/bin .
 
-# Add the dependencies for the final image
-FROM alpine:latest as add-deps
+RUN git clone --branch ${COSIGN_VERSION} --depth 1 https://github.com/sigstore/cosign
+WORKDIR /app/cosign
+RUN make cosign && \
+    mv cosign /usr/local/bin
+   
+RUN git clone --branch ${CRANE_VERSION} --depth 1 https://github.com/google/go-containerregistry
+WORKDIR /app/go-containerregistry
+RUN go build -ldflags="-s -w -X github.com/google/go-containerregistry/cmd/crane/cmd.Version=${CRANE_VERSION}" -o /usr/local/bin ./cmd/crane
 
-RUN apk --no-cache add curl jq sqlite-libs git
-
+RUN git clone --branch ${RELEASE_CLI_VERSION} --depth 1 https://gitlab.com/gitlab-org/release-cli
+WORKDIR /app/release-cli
+RUN make build && \
+    mv ./bin/release-cli /usr/local/bin
+    
+RUN git clone --branch ${GATECHECK_VERSION} --depth 1 https://github.com/gatecheckdev/gatecheck
+WORKDIR /app/gatecheck
+RUN go build -ldflags="-s -w" -o /usr/local/bin ./cmd/gatecheck
+    
 # Final Image
-FROM add-deps
+FROM alpine:latest
+
+RUN apk --no-cache add curl jq sqlite-libs git ca-certificates 
 
 ENV USER=omnibus
 ENV UID=12345
@@ -45,13 +66,13 @@ RUN addgroup omnibus && adduser \
 	chown -R omnibus:omnibus /usr/local/bin/ && \
 	chown -R omnibus:omnibus /app
 
-COPY --from=build /go/bin/grype /usr/local/bin/grype
-COPY --from=build /go/bin/syft /usr/local/bin/syft
-COPY --from=build /go/bin/gitleaks /usr/local/bin/gitleaks
-COPY --from=build /go/bin/cosign /usr/local/bin/cosign
-COPY --from=build /go/bin/crane /usr/local/bin/crane
-COPY --from=build /go/bin/release-cli /usr/local/bin/release-cli
-COPY --from=build /go/bin/gatecheck /usr/local/bin/gatecheck
+COPY --from=build /usr/local/bin/grype /usr/local/bin/grype
+COPY --from=build /usr/local/bin/syft /usr/local/bin/syft
+COPY --from=build /usr/local/bin/gitleaks /usr/local/bin/gitleaks
+COPY --from=build /usr/local/bin/cosign /usr/local/bin/cosign
+COPY --from=build /usr/local/bin/crane /usr/local/bin/crane
+COPY --from=build /usr/local/bin/release-cli /usr/local/bin/release-cli
+COPY --from=build /usr/local/bin/gatecheck /usr/local/bin/gatecheck
 
 USER omnibus
 

@@ -40,14 +40,14 @@ grype:
     - curl -LO vul-server/vulndb.tar.gz
     - grype db import vulndb.tar.gz
     - grype db check
-    - grype bkimminich/juice-shop -o json --file report.json
+    - grype artifactory.cloud.cms.gov/docker/bkimminich/juice-shop -o json --file report.json
     - cat report.json | jq .
 
 syft:
   extends: .with-current-image
   script:
     - syft version
-    - syft artifactory.cloud.cms.gov/docker/alpine:latest --scope=AllLayers -o cyclonedx-json --file ${IMAGE_SBOM}
+    - syft artifactory.cloud.cms.gov/docker/bkimminich/juice-shop --scope=AllLayers -o cyclonedx-json --file ${IMAGE_SBOM}
     - cat ${IMAGE_SBOM}
 
 gitleaks:
