@@ -8,7 +8,7 @@ ARG GITLEAKS_VERSION=v8.18.0
 ARG COSIGN_VERSION=v2.2.0
 ARG CRANE_VERSION=v0.16.1
 ARG RELEASE_CLI_VERSION=v0.16.0
-ARG GATECHECK_VERSION=v0.2.1
+ARG GATECHECK_VERSION=v0.2.2
 
 RUN apk --no-cache add ca-certificates git openssh
 
@@ -27,7 +27,7 @@ FROM alpine:latest as add-deps
 RUN apk --no-cache add curl jq sqlite-libs git
 
 # Final Image
-FROM add-deps 
+FROM add-deps
 
 ENV USER=omnibus
 ENV UID=12345
