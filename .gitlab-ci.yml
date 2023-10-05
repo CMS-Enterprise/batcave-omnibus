@@ -6,6 +6,10 @@ stages:
 variables:
   TEMPLATE_VERSION: "main"
 
+# delivery-pipeline
+#
+# build the omnibus image with commit tag.
+# will only run when it's NOT a commit tag branch
 delivery-pipeline:
   stage: build
   variables:
@@ -16,6 +20,24 @@ delivery-pipeline:
       - project: "devops-pipelines/pipeline-triggers"
         ref: ${TEMPLATE_VERSION}
         file: "delivery.yaml"
+  rules:
+    - if: $CI_COMMIT_TAG == ""
+
+# release-pipeline
+#
+# create a release when there is a git tag pushed to this repo
+release-pipeline:
+  stage: release
+  trigger:
+    strategy: depend
+    include:
+      - project: "devops-pipelines/pipeline-triggers"
+        ref: ${TEMPLATE_VERSION}
+        file: "release.yaml"
+  rules:
+    - if: $CI_COMMIT_TAG
+
+# The following jobs are for testing the currently built image
 
 .with-current-image:
   stage: test
@@ -81,13 +103,3 @@ release-tool:
   script:
     - release-cli help
 
-release-pipeline:
-  stage: release
-  trigger:
-    strategy: depend
-    include:
-      - project: "devops-pipelines/pipeline-triggers"
-        ref: ${TEMPLATE_VERSION}
-        file: "release.yaml"
-  rules:
-    - if: $CI_COMMIT_TAG
