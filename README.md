@@ -1,12 +1,14 @@
 # Omnibus
 
+[![pipeline status](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/badges/main/pipeline.svg)](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/commits/main) 
+| [![Latest Release](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/badges/release.svg)](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/releases)
+
 ## Background
 
 Omnibus is a lightweight utility image built by the nightwing team as a pipeline optimization.
 Since most of the security scanning and utility tools we use in the pipeline are written in Golang,
 they can be statically compiled and loaded into a barebones container.
 This reduces the overhead of maintaining repositories for each tool if there isn't much to the build process.
-
 
 ## Included
 
