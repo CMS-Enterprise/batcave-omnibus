@@ -75,7 +75,7 @@ syft:
   extends: .with-current-image
   script:
     - syft version
-    - syft artifactory.cloud.cms.gov/docker/bkimminich/juice-shop --scope=squashed -o cyclonedx-json --file ${IMAGE_SBOM}
+    - syft artifactory.cloud.cms.gov/docker/bkimminich/juice-shop --scope=squashed -o json --file ${IMAGE_SBOM}
     - cat ${IMAGE_SBOM}
 
 gitleaks:
