@@ -47,7 +47,7 @@ RUN cd gatecheck && \
     
 FROM alpine:latest as final-base
 
-RUN apk --no-cache add curl jq sqlite-libs git ca-certificates 
+RUN apk --no-cache add curl jq sqlite-libs git ca-certificates tzdata
 
 ENV USER=omnibus
 ENV UID=12345
