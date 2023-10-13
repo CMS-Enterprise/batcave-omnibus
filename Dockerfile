@@ -45,8 +45,7 @@ RUN git clone --branch ${GATECHECK_VERSION} --depth=1 --single-branch https://gi
 RUN cd gatecheck && \
     go build -ldflags="-s -w" -o /usr/local/bin ./cmd/gatecheck
     
-# Final Image
-FROM alpine:latest
+FROM alpine:latest as final-base
 
 RUN apk --no-cache add curl jq sqlite-libs git ca-certificates 
 
@@ -66,6 +65,30 @@ RUN addgroup omnibus && adduser \
 	chown -R omnibus:omnibus /usr/local/bin/ && \
 	chown -R omnibus:omnibus /app
 
+LABEL org.opencontainers.image.title="omnibus"
+LABEL org.opencontainers.image.description="A collection of CI/CD tools for batCAVE"
+LABEL org.opencontainers.image.vendor="nightwing"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
+LABEL io.artifacthub.package.readme-url="https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/blob/main/README.md"
+LABEL io.artifacthub.package.license="Apache-2.0"
+
+
+# Final image in a CI environment, assumes binaries are located in ./bin
+FROM final-base as final-ci
+
+COPY ./bin/grype /usr/local/bin/grype
+COPY ./bin/syft /usr/local/bin/syft
+COPY ./bin/gitleaks /usr/local/bin/gitleaks
+COPY ./bin/cosign /usr/local/bin/cosign
+COPY ./bin/crane /usr/local/bin/crane
+COPY ./bin/release-cli /usr/local/bin/release-cli
+COPY ./bin/gatecheck /usr/local/bin/gatecheck
+
+USER omnibus
+
+# Final image if building locally and build dependencies are needed
+FROM final-base
+
 COPY --from=build /usr/local/bin/grype /usr/local/bin/grype
 COPY --from=build /usr/local/bin/syft /usr/local/bin/syft
 COPY --from=build /usr/local/bin/gitleaks /usr/local/bin/gitleaks
@@ -75,10 +98,3 @@ COPY --from=build /usr/local/bin/release-cli /usr/local/bin/release-cli
 COPY --from=build /usr/local/bin/gatecheck /usr/local/bin/gatecheck
 
 USER omnibus
-
-LABEL org.opencontainers.image.title="omnibus"
-LABEL org.opencontainers.image.description="A collection of CI/CD tools for batCAVE"
-LABEL org.opencontainers.image.vendor="nightwing"
-LABEL org.opencontainers.image.licenses="Apache-2.0"
-LABEL io.artifacthub.package.readme-url="https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/blob/main/README.md"
-LABEL io.artifacthub.package.license="Apache-2.0"
