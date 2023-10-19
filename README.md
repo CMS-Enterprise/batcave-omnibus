@@ -3,6 +3,8 @@
 [![pipeline status](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/badges/main/pipeline.svg)](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/commits/main) 
 | [![Latest Release](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/badges/release.svg)](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/releases)
 
+![Guardian Logo](assets/splash_1_light.png)
+
 ## Background
 
 Omnibus is a lightweight utility image built by the nightwing team as a pipeline optimization.
