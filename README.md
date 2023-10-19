@@ -3,13 +3,13 @@
 [![pipeline status](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/badges/main/pipeline.svg)](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/commits/main) 
 | [![Latest Release](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/badges/release.svg)](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/releases)
 
-![Guardian Logo](assets/splash_1_light.png)
+![Omnibus Logo](assets/splash_1_light.png)
 
 ## Background
 
-Omnibus is a lightweight utility image built by the nightwing team as a pipeline optimization.
+Omnibus is a lightweight utility image built by the Nightwing team as a pipeline optimization.
 Since most of the security scanning and utility tools we use in the pipeline are written in Golang,
-they can be statically compiled and loaded into a barebones container.
+they can be statically compiled and loaded into a bare-bones container.
 This reduces the overhead of maintaining repositories for each tool if there isn't much to the build process.
 
 ## Included
@@ -21,7 +21,7 @@ The criteria for a tool to be considered for omnibus is as follows:
 3. The tool MUST not require an additional runtime, (i.e. Python, Java, Node)
 4. The tool MUST target Alpine Linux for it's binary
 
-These rules exists to keep the image as small as possible which decreases the amount of time each job takes in the
+These rules exist to keep the image as small as possible which decreases the amount of time each job takes in the
 pipeline.
 
 - [Anchore Grype](https://github.com/anchore/grype)
@@ -31,6 +31,7 @@ pipeline.
 - [Google Crane](https://github.com/google/go-containerregistry/cmd/crane)
 - [GitLab Release CLI](https://gitlab.com/gitlab-org/release-cli/cmd/release-cli)
 - [Gatecheck](https://github.com/gatecheckdev/gatecheck)
+- [Go S3 Upload](https://github.com/bacchusjackson/go-s3-upload)
 
 ## Rejected
 
@@ -55,7 +56,7 @@ As of the rejection date, ClamAV requires a lot of libraries as dependencies, be
 would significantly increase the build time for Omnibus.
 There have also been several attempts to build it as statically linked binary with little success in
 alpine container.
-Adding it into Omnibus with all of the dependent dynamic libraries would increase the threat vector for the container.
+Adding it into Omnibus with all the dependent dynamic libraries would increase the threat vector for the container.
 
 ### Semgrep
 

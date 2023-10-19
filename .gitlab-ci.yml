@@ -110,6 +110,21 @@ gatecheck:
     - gatecheck version
     - gatecheck config info
 
+s3upload:
+  extends: .with-current-image
+  variables:
+    AWS_DEFAULT_PROFILE: ${BC_AWS_PROFILE_PROD}
+    AWS_BUCKET: ${BC_AWS_SECURITY_SCANS_STORAGE_BUCKET_PROD}
+    PRODUCT: ${CI_PROJECT_NAME}
+    ENGAGEMENT: "${CI_PROJECT_NAME}_pipeline_${CI_PIPELINE_ID}_${CI_COMMIT_REF_NAME}"
+  script:
+    - export PRODUCT_TYPE=$(basename ${CI_PROJECT_NAMESPACE})
+    - export EXPORT_DATE=$(date -u +"%Y%m%d")
+    - export S3_KEY=${EXPORT_DATE}/${PRODUCT_TYPE}/${PRODUCT}/${ENGAGEMENT}
+    - echo "Omnibus Smoke Test - Ignore" > file-1.txt
+    - ls -la
+    - s3upload -f file-1.txt -b ${AWS_BUCKET} -k ${S3_KEY}
+
 release-tool:
   extends: .with-current-image
   script:
