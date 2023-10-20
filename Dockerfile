@@ -46,7 +46,7 @@ RUN git clone --branch ${GATECHECK_VERSION} --depth=1 --single-branch https://gi
 RUN cd gatecheck && \
     go build -ldflags="-s -w" -o /usr/local/bin ./cmd/gatecheck
 
-RUN git clone --branch ${S3UPLOAD_VERSION}} --depth=1 --single-branch https://github.com/bacchusjackson/go-s3-upload /app/s3upload
+RUN git clone --branch ${S3UPLOAD_VERSION} --depth=1 --single-branch https://github.com/bacchusjackson/go-s3-upload /app/go-s3-upload
 RUN cd go-s3-upload && \
     go build -ldflags="-s -w" -o /usr/local/bin/s3upload .
     
