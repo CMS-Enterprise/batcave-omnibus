@@ -9,7 +9,7 @@ ARG COSIGN_VERSION=v2.2.0
 ARG CRANE_VERSION=v0.16.1
 ARG RELEASE_CLI_VERSION=v0.16.0
 ARG GATECHECK_VERSION=v0.3.0
-ARG S3UPLOAD_VERSION=v1.0.1
+ARG S3UPLOAD_VERSION=v1.0.2
 
 RUN apk --no-cache add ca-certificates git openssh make
 
@@ -101,6 +101,7 @@ COPY --from=build /usr/local/bin/gitleaks /usr/local/bin/gitleaks
 COPY --from=build /usr/local/bin/cosign /usr/local/bin/cosign
 COPY --from=build /usr/local/bin/crane /usr/local/bin/crane
 COPY --from=build /usr/local/bin/release-cli /usr/local/bin/release-cli
+COPY --from=build /usr/local/bin/gatecheck /usr/local/bin/gatecheck
 COPY --from=build /usr/local/bin/s3upload /usr/local/bin/s3upload
 
 USER omnibus
