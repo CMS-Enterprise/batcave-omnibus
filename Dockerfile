@@ -54,20 +54,7 @@ FROM alpine:latest as final-base
 
 RUN apk --no-cache add curl jq sqlite-libs git ca-certificates tzdata
 
-ENV USER=omnibus
-ENV UID=12345
-ENV GID=23456
-
 WORKDIR /app
-
-RUN addgroup omnibus && adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/home/$USER" \
-    --ingroup "$USER" \
-    --uid "$UID" \
-    "$USER" && \
-	chown -R omnibus:omnibus /app
 
 LABEL org.opencontainers.image.title="omnibus"
 LABEL org.opencontainers.image.description="A collection of CI/CD tools for batCAVE"
@@ -75,7 +62,6 @@ LABEL org.opencontainers.image.vendor="nightwing"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 LABEL io.artifacthub.package.readme-url="https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/blob/main/README.md"
 LABEL io.artifacthub.package.license="Apache-2.0"
-
 
 # Final image in a CI environment, assumes binaries are located in ./bin
 FROM final-base as final-ci
@@ -102,5 +88,3 @@ COPY --from=build /usr/local/bin/crane /usr/local/bin/crane
 COPY --from=build /usr/local/bin/release-cli /usr/local/bin/release-cli
 COPY --from=build /usr/local/bin/gatecheck /usr/local/bin/gatecheck
 COPY --from=build /usr/local/bin/s3upload /usr/local/bin/s3upload
-
-USER omnibus
