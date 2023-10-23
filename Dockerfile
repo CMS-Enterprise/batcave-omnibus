@@ -63,11 +63,10 @@ WORKDIR /app
 RUN addgroup omnibus && adduser \
     --disabled-password \
     --gecos "" \
-    --home "$(pwd)" \
+    --home "/home/$USER" \
     --ingroup "$USER" \
     --uid "$UID" \
     "$USER" && \
-	chown -R omnibus:omnibus /usr/local/bin/ && \
 	chown -R omnibus:omnibus /app
 
 LABEL org.opencontainers.image.title="omnibus"
