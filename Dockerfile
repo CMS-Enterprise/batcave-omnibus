@@ -1,6 +1,6 @@
 # TODO: clamAV, semgrep
 
-FROM golang:alpine as build
+FROM artifactory.cloud.cms.gov/docker/golang:alpine as build
 
 ARG GRYPE_VERSION=v0.71.0
 ARG SYFT_VERSION=v0.93.0
@@ -50,7 +50,7 @@ RUN git clone --branch ${S3UPLOAD_VERSION} --depth=1 --single-branch https://git
 RUN cd go-s3-upload && \
     go build -ldflags="-s -w" -o /usr/local/bin/s3upload .
     
-FROM alpine:latest as final-base
+FROM artifactory.cloud.cms.gov/docker/alpine:latest as final-base
 
 RUN apk --no-cache add curl jq sqlite-libs git ca-certificates tzdata
 
