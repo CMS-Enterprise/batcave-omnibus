@@ -52,7 +52,7 @@ RUN cd go-s3-upload && \
     
 FROM artifactory.cloud.cms.gov/docker/alpine:latest as final-base
 
-RUN apk --no-cache add curl jq sqlite-libs git ca-certificates tzdata
+RUN apk --no-cache add curl jq sqlite-libs git ca-certificates tzdata just
 
 WORKDIR /app
 

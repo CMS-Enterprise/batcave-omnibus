@@ -46,6 +46,22 @@ release-pipeline:
   rules:
     - if: $CI_COMMIT_TAG
 
+# release-gitlab
+#
+# creates a release package for GitLab UI
+release-gitlab:
+  stage: release
+  image: ${APP_IMAGE}
+  script:
+    - echo "Release to GitLab..."
+  rules:
+    - if: $CI_COMMIT_TAG
+  release:
+    tag_name: $CI_COMMIT_TAG
+    name: "Release $CI_COMMIT_TAG"
+    description: "Omnibus Release $CI_COMMIT_TAG"
+  
+
 # The following jobs are for testing the currently built image
 
 .with-current-image:
