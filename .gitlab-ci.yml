@@ -67,6 +67,7 @@ release-gitlab:
 .with-current-image:
   stage: test
   image: ${APP_IMAGE}
+  needs: ["delivery-pipeline"]
   variables:
     APP_IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
     APP_IMAGE_SRC: ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}

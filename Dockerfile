@@ -86,6 +86,8 @@ USER omnibus
 # Final image if building locally and build dependencies are needed
 FROM final-base
 
+COPY --from=build-just /usr/local/cargo/bin/just /usr/local/bin/just
+
 COPY --from=build /usr/local/bin/grype /usr/local/bin/grype
 COPY --from=build /usr/local/bin/syft /usr/local/bin/syft
 COPY --from=build /usr/local/bin/gitleaks /usr/local/bin/gitleaks
@@ -94,4 +96,3 @@ COPY --from=build /usr/local/bin/crane /usr/local/bin/crane
 COPY --from=build /usr/local/bin/release-cli /usr/local/bin/release-cli
 COPY --from=build /usr/local/bin/gatecheck /usr/local/bin/gatecheck
 COPY --from=build /usr/local/bin/s3upload /usr/local/bin/s3upload
-COPY --from=build /usr/local/cargo/bin/just /usr/local/bin/just
