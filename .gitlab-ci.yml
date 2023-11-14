@@ -51,7 +51,7 @@ release-pipeline:
 # creates a release package for GitLab UI
 release-gitlab:
   stage: release
-  image: artifactory.cloud.cms.gov/batcave-docker/devops-pipelines/pipeline-tools/omnibus:v1.0.0-rc.9
+  image: artifactory.cloud.cms.gov/batcave-docker/devops-pipelines/pipeline-tools/omnibus:v1.0.0-rc.10
   script:
     - echo "Release to GitLab..."
   rules:

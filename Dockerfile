@@ -49,10 +49,15 @@ RUN cd gatecheck && \
 RUN git clone --branch ${S3UPLOAD_VERSION} --depth=1 --single-branch https://github.com/bacchusjackson/go-s3-upload /app/go-s3-upload
 RUN cd go-s3-upload && \
     go build -ldflags="-s -w" -o /usr/local/bin/s3upload .
-    
+
+FROM artifactory.cloud.cms.gov/docker/rust:alpine as build-just
+
+RUN apk add musl-dev
+RUN cargo install just
+
 FROM artifactory.cloud.cms.gov/docker/alpine:latest as final-base
 
-RUN apk --no-cache add curl jq sqlite-libs git ca-certificates tzdata just
+RUN apk --no-cache add curl jq sqlite-libs git ca-certificates tzdata
 
 WORKDIR /app
 
@@ -74,6 +79,7 @@ COPY ./bin/crane /usr/local/bin/crane
 COPY ./bin/release-cli /usr/local/bin/release-cli
 COPY ./bin/gatecheck /usr/local/bin/gatecheck
 COPY ./bin/s3upload /usr/local/bin/s3upload
+COPY ./bin/just /usr/local/bin/just
 
 USER omnibus
 
@@ -88,3 +94,4 @@ COPY --from=build /usr/local/bin/crane /usr/local/bin/crane
 COPY --from=build /usr/local/bin/release-cli /usr/local/bin/release-cli
 COPY --from=build /usr/local/bin/gatecheck /usr/local/bin/gatecheck
 COPY --from=build /usr/local/bin/s3upload /usr/local/bin/s3upload
+COPY --from=build /usr/local/cargo/bin/just /usr/local/bin/just
