@@ -10,6 +10,7 @@ ARG CRANE_VERSION=v0.16.1
 ARG RELEASE_CLI_VERSION=v0.16.0
 ARG GATECHECK_VERSION=v0.3.0
 ARG S3UPLOAD_VERSION=v1.0.4
+ARG ORAS_VERSION=v1.1.0
 
 RUN apk --no-cache add ca-certificates git openssh make
 
@@ -50,6 +51,11 @@ RUN git clone --branch ${S3UPLOAD_VERSION} --depth=1 --single-branch https://git
 RUN cd go-s3-upload && \
     go build -ldflags="-s -w" -o /usr/local/bin/s3upload .
 
+RUN git clone --branch ${ORAS_VERSION} --depth=1 --single-branch https://github.com/oras-project/oras /app/oras
+RUN cd oras && \
+    make build-linux-amd64 && \
+    mv bin/linux/amd64/oras /usr/local/bin/oras
+
 FROM artifactory.cloud.cms.gov/docker/rust:alpine as build-just
 
 RUN apk add musl-dev
@@ -80,6 +86,7 @@ COPY ./bin/release-cli /usr/local/bin/release-cli
 COPY ./bin/gatecheck /usr/local/bin/gatecheck
 COPY ./bin/s3upload /usr/local/bin/s3upload
 COPY ./bin/just /usr/local/bin/just
+COPY ./bin/oras /usr/local/bin/oras
 
 USER omnibus
 
@@ -96,3 +103,4 @@ COPY --from=build /usr/local/bin/crane /usr/local/bin/crane
 COPY --from=build /usr/local/bin/release-cli /usr/local/bin/release-cli
 COPY --from=build /usr/local/bin/gatecheck /usr/local/bin/gatecheck
 COPY --from=build /usr/local/bin/s3upload /usr/local/bin/s3upload
+COPY --from=build /usr/local/bin/oras /usr/local/bin/oras

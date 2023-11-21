@@ -143,6 +143,21 @@ s3upload:
     - ls -la
     - s3upload -f file-1.txt -b ${AWS_BUCKET} -k ${S3_KEY}
 
+oras:
+  extends: .with-current-image
+  variables:
+    TARGET_IMAGE: artifactory.cloud.cms.gov/batcave-docker/pipeline-cache/omnibus-smoke-test:${CI_COMMIT_REF_NAME}
+    ARTIFACT_TYPE: "application/vnd.cms.batcave.grype-cache+tar+gzip"
+  script:
+    - date > omnibus-smoke-test.txt
+    - cat omnibus-smoke-test.txt
+    - oras push -v --artifact-type ${ARTIFACT_TYPE} ${TARGET_IMAGE} omnibus-smoke-test.txt
+    - rm omnibus-smoke-test.txt
+    - ls -lah
+    - oras pull -v ${TARGET_IMAGE}
+    - cat omnibus-smoke-test.txt
+
+
 release-tool:
   extends: .with-current-image
   script:
