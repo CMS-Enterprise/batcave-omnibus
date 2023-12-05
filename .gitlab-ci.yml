@@ -85,11 +85,10 @@ release-gitlab:
 
 grype:
   extends: .with-current-image
-  services:
-    - name: artifactory.cloud.cms.gov/batcave-docker/devops-pipelines/pipeline-tools/grype-cache-server:latest
-      alias: vul-server
+  variables:
+    GRYPE_CACHE_IMAGE: "${BC_IMAGE_REPO}/devops-pipelines/cache/grype/vulndb:latest"
   script:
-    - curl -LO vul-server/vulndb.tar.gz
+    - oras pull ${GRYPE_CACHE_IMAGE}
     - grype db import vulndb.tar.gz
     - grype db check
     - grype artifactory.cloud.cms.gov/docker/bkimminich/juice-shop -o json --file report.json
@@ -146,12 +145,12 @@ s3upload:
 oras:
   extends: .with-current-image
   variables:
-    TARGET_IMAGE: artifactory.cloud.cms.gov/batcave-docker/pipeline-cache/omnibus-smoke-test:${CI_COMMIT_REF_NAME}
-    ARTIFACT_TYPE: "application/vnd.cms.batcave.grype-cache+tar+gzip"
+    ARTIFACT_TYPE: "application/vnd.cms.batcave.smoke-test+text"
+    SMOKE_TEST_IMAGE: "${BC_IMAGE_REPO}/devops-pipelines/cache/omnibus/smoke-test:latest"
   script:
     - date > omnibus-smoke-test.txt
     - cat omnibus-smoke-test.txt
-    - oras push -v --artifact-type ${ARTIFACT_TYPE} ${TARGET_IMAGE} omnibus-smoke-test.txt
+    - oras push -v --artifact-type ${ARTIFACT_TYPE} ${SMOKE_TEST_IMAGE} omnibus-smoke-test.txt
     - rm omnibus-smoke-test.txt
     - ls -lah
     - oras pull -v ${TARGET_IMAGE}

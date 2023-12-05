@@ -7,7 +7,7 @@
 
 ## Background
 
-Omnibus is a lightweight utility image built by the Nightwing team as a pipeline optimization.
+Omnibus is a light-weight utility image built by the Nightwing team as a pipeline optimization.
 Since most of the security scanning and utility tools we use in the pipeline are written in Golang,
 they can be statically compiled and loaded into a bare-bones container.
 This reduces the overhead of maintaining repositories for each tool if there isn't much to the build process.
