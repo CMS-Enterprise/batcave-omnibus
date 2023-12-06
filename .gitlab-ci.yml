@@ -153,7 +153,7 @@ oras:
     - oras push -v --artifact-type ${ARTIFACT_TYPE} ${SMOKE_TEST_IMAGE} omnibus-smoke-test.txt
     - rm omnibus-smoke-test.txt
     - ls -lah
-    - oras pull -v ${TARGET_IMAGE}
+    - oras pull -v ${SMOKE_TEST_IMAGE}
     - cat omnibus-smoke-test.txt
 
 
