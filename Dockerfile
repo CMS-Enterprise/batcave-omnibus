@@ -1,6 +1,6 @@
 # TODO: clamAV, semgrep
 
-FROM artifactory.cloud.cms.gov/docker/golang:alpine as build
+FROM artifactory.cloud.cms.gov/docker/golang:alpine3.18 as build
 
 ARG GRYPE_VERSION=v0.74.0
 ARG SYFT_VERSION=v0.100.0
@@ -56,12 +56,12 @@ RUN cd oras && \
     make build-linux-amd64 && \
     mv bin/linux/amd64/oras /usr/local/bin/oras
 
-FROM artifactory.cloud.cms.gov/docker/rust:alpine as build-just
+FROM artifactory.cloud.cms.gov/docker/rust:alpine3.18 as build-just
 
 RUN apk add musl-dev
 RUN cargo install just
 
-FROM artifactory.cloud.cms.gov/docker/alpine:latest as final-base
+FROM artifactory.cloud.cms.gov/docker/alpine:3.18 as final-base
 
 RUN apk --no-cache add curl jq sqlite-libs git ca-certificates tzdata
 
