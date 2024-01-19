@@ -19,7 +19,7 @@
         "FROM golang:alpine(?<currentValue>\\S+)",
         "FROM alpine:(?<currentValue>\\S+)"
       ],
-      "depNameTemplate": "registry.hub.docker.com/library/{{depName}}",
+      "depNameTemplate": "registry.hub.docker.com/library/alpine",
       "datasourceTemplate": "docker",
       "versioningTemplate": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)(\\.(?<patch>\\d+))?"
     },
@@ -30,7 +30,7 @@
       "matchStrings": [
         "FROM artifactory.cloud.cms.gov/docker/rust:(?<currentValue>\\S+)"
       ],
-      "depNameTemplate": "registry.hub.docker.com/library/{{depName}}",
+      "depNameTemplate": "registry.hub.docker.com/library/rust",
       "datasourceTemplate": "docker",
       "versioningTemplate": "regex:^(?<compatability>alpine)(?<major>\\d+)\\.(?<minor>\\d+)(\\.(?<patch>\\d+))?"
     },
