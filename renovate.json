@@ -16,7 +16,7 @@
         "^Dockerfile$"
       ],
       "matchStrings": [
-        "FROM golang:(?<currentValue>\\S+)"
+        "FROM artifactory.cloud.cms.gov/docker/golang:(?<currentValue>\\S+)"
       ],
       "depNameTemplate": "registry.hub.docker.com/library/golang",
       "datasourceTemplate": "docker",
@@ -27,7 +27,7 @@
         "^Dockerfile$"
       ],
       "matchStrings": [
-        "FROM alpine:(?<currentValue>\\S+)"
+        "FROM artifactory.cloud.cms.gov/docker/alpine:(?<currentValue>\\S+)"
       ],
       "depNameTemplate": "registry.hub.docker.com/library/alpine",
       "datasourceTemplate": "docker",
