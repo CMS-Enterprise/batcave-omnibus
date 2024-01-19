@@ -16,7 +16,17 @@
         "^Dockerfile$"
       ],
       "matchStrings": [
-        "FROM golang:alpine(?<currentValue>\\S+)",
+        "FROM golang:(?<currentValue>\\S+)"
+      ],
+      "depNameTemplate": "registry.hub.docker.com/library/golang",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "regex:^(?<compatability>alpine)(?<major>\\d+)\\.(?<minor>\\d+)(\\.(?<patch>\\d+))?"
+    },
+    {
+      "fileMatch": [
+        "^Dockerfile$"
+      ],
+      "matchStrings": [
         "FROM alpine:(?<currentValue>\\S+)"
       ],
       "depNameTemplate": "registry.hub.docker.com/library/alpine",
