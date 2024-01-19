@@ -45,7 +45,18 @@
       ],
       "depNameTemplate": "registry.hub.docker.com/library/{{depName}}",
       "datasourceTemplate": "docker",
-      "versioningTemplate": "regex:^(?<major>\\d+)(?<compatibility>\\d+\\.\\d+)"
+      "versioningTemplate": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)"
+    },
+    {
+      "fileMatch": [
+        "^Dockerfile$"
+      ],
+      "matchStrings": [
+        "FROM artifactory.cloud.cms.gov/docker/rust:(?<currentValue>\\S+)"
+      ],
+      "depNameTemplate": "registry.hub.docker.com/library/{{depName}}",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "regex:^(?<compatability>alpine)(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)"
     },
     {
       "fileMatch": [

@@ -12,7 +12,7 @@ ARG GATECHECK_VERSION=v0.3.0
 ARG S3UPLOAD_VERSION=v1.0.4
 ARG ORAS_VERSION=v1.1.0
 
-RUN apk --no-cache add ca-certificates git openssh make
+RUN apk --no-cache add ca-certificates git make
 
 WORKDIR /app
 
