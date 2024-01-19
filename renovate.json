@@ -1,37 +1,13 @@
 {
-  "dockerfile": {
-    "fileMatch": [
-      "^Dockerfile$"
-    ]
-  },
-  "groupName": "all dependencies",
-  "groupSlug": "all",
   "separateMajorMinor": false,
   "packageRules": [
     {
-      "matchManagers": [
-        "dockerfile"
+      "matchPackagePatterns": [
+        "*"
       ],
       "groupName": "docker dependencies",
       "groupSlug": "Docker",
       "enabled": true
-    },
-    {
-      "matchManagers": [
-        "gomod"
-      ],
-      "groupName": "gomod dependencies",
-      "groupSlug": "gomod",
-      "enabled": false
-    },
-    {
-      "matchManagers": [
-        "dockerfile",
-        "gomod"
-      ],
-      "groupName": "gomod, and docker dependencies",
-      "groupSlug": "all",
-      "enabled": false
     }
   ],
   "regexManagers": [
