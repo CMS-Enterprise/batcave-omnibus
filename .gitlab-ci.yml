@@ -60,7 +60,6 @@ release-gitlab:
     tag_name: $CI_COMMIT_TAG
     name: "Release $CI_COMMIT_TAG"
     description: "Omnibus Release $CI_COMMIT_TAG"
-  
 
 # The following jobs are for testing the currently built image
 
@@ -156,9 +155,26 @@ oras:
     - oras pull -v ${SMOKE_TEST_IMAGE}
     - cat omnibus-smoke-test.txt
 
+workflow-engine:
+  extends: .with-current-image
+  variables:
+    WFE_BUILD_DIR: "."
+    WFE_BUILD_DOCKERFILE: "Dockerfile"
+    WFE_BUILD_TAG: "latest"
+    WFE_BUILD_PLATFORM: "linux/amd64"
+    WFE_BUILD_TARGET: "build"
+    WFE_BUILD_CACHE_TO: ""
+    WFE_BUILD_CACHE_FROM: ""
+    WFE_BUILD_SQUASH_LAYERS: "false"
+    WFE_SCAN_IMAGE_TARGET: ""
+    WFE_ARTIFACT_DIRECTORY: ".artifacts"
+    WFE_SBOM_FILENAME: "sbom.json"
+    WFE_GRYPE_FILENAME: "grype.json"
+  script:
+    - echo "Workflow Engine Smoke Test"
+    - workflow-engine run debug
 
 release-tool:
   extends: .with-current-image
   script:
     - release-cli help
-

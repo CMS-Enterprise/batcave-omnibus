@@ -1,6 +1,6 @@
 # Omnibus
 
-[![pipeline status](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/badges/main/pipeline.svg)](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/commits/main) 
+[![pipeline status](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/badges/main/pipeline.svg)](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/commits/main)
 | [![Latest Release](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/badges/release.svg)](https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/releases)
 
 ![Omnibus Logo](assets/splash_1_light.png)
@@ -32,6 +32,7 @@ pipeline.
 - [GitLab Release CLI](https://gitlab.com/gitlab-org/release-cli/cmd/release-cli)
 - [Gatecheck](https://github.com/gatecheckdev/gatecheck)
 - [Go S3 Upload](https://github.com/bacchusjackson/go-s3-upload)
+- [Workflow Engine](https://github.com/CMS-Enterprise/batcave-workflow-engine)
 
 ## Rejected
 
@@ -66,4 +67,3 @@ POC: Bacchus Jackson (bjackson@clarityinnovates.com)
 
 Semgrep CLI uses a Python wrapper.
 This would require the python runtime, which violates rule 3.
-
