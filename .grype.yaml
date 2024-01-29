@@ -1,0 +1,5 @@
+ignore:
+  - vulnerability: CVE-2023-48795
+    fix-state: unknown
+    vex-status: not_affected
+    vex-justification: vulnerable_code_not_present

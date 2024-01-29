@@ -11,6 +11,7 @@ ARG RELEASE_CLI_VERSION=v0.16.0
 ARG GATECHECK_VERSION=v0.3.0
 ARG S3UPLOAD_VERSION=v1.0.4
 ARG ORAS_VERSION=v1.1.0
+ARG WFE_VERSION=main
 
 RUN apk --no-cache add ca-certificates git make
 
@@ -56,6 +57,10 @@ RUN cd oras && \
     make build-linux-amd64 && \
     mv bin/linux/amd64/oras /usr/local/bin/oras
 
+RUN git clone --branch ${WFE_VERSION} --depth=1 --single-branch https://github.com/CMS-Enterprise/batcave-workflow-engine /app/batcave-workflow-engine
+RUN cd batcave-workflow-engine && \
+    go build -ldflags="-s -w" -o /usr/local/bin/workflow-engine ./cmd/workflow-engine
+
 FROM artifactory.cloud.cms.gov/docker/rust:alpine3.19 as build-just
 
 RUN apk add musl-dev
@@ -87,6 +92,7 @@ COPY ./bin/gatecheck /usr/local/bin/gatecheck
 COPY ./bin/s3upload /usr/local/bin/s3upload
 COPY ./bin/just /usr/local/bin/just
 COPY ./bin/oras /usr/local/bin/oras
+COPY ./bin/workflow-engine /usr/local/bin/workflow-engine
 
 USER omnibus
 
@@ -104,3 +110,4 @@ COPY --from=build /usr/local/bin/release-cli /usr/local/bin/release-cli
 COPY --from=build /usr/local/bin/gatecheck /usr/local/bin/gatecheck
 COPY --from=build /usr/local/bin/s3upload /usr/local/bin/s3upload
 COPY --from=build /usr/local/bin/oras /usr/local/bin/oras
+COPY --from=build /usr/local/bin/workflow-engine /usr/local/bin/workflow-engine
