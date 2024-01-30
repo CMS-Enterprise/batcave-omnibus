@@ -64,8 +64,6 @@ jobs:
     # if the current branch is not a tag, then run the pipeline
     # if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    container:
-      image: "${APP_IMAGE}"
     env:
       APP_IMAGE_TAG: ${{ github.sha }}
       APP_IMAGE_SRC: ${{ secrets.BC_IMAGE_REPO }}/${{ github.repository }}
@@ -74,6 +72,8 @@ jobs:
       GITLEAKS_REPORT: ${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json
       IMAGE_SBOM: ${ARTIFACT_FOLDER}/sbom/sbom.json
       COSIGN_EXPERIMENTAL: 1
+    container:
+      image: "${APP_IMAGE}"
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
