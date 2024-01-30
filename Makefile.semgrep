@@ -1,0 +1,14 @@
+# Set environment variables used by dune files to locate the
+# C headers and libraries of the tree-sitter runtime library.
+# This file is created by ocaml-tree-sitter-core's configure script.
+#
+# Because of these required environment variables, we can't call dune directly
+# to build semgrep-core, unless you manually execute first
+#  `source src/ocaml-tree-sitter-core/tree-sitter-config.sh`
+#
+# I use '-include' and not 'include' because before 'make setup' this file does
+# not exist but we still want 'make setup' to succeed
+-include libs/ocaml-tree-sitter-core/tree-sitter-config.mk
+
+release-build:
+	dune build --release _build/install/default/bin/semgrep-core
