@@ -14,6 +14,7 @@ on:
 env:
   TEMPLATE_VERSION: "main"
   FETCH_SAST_ARTIFACTS: "false"
+  BC_IMAGE_REPO: ${{ secrets.BC_ARTIFACTORY_URL }}/batcave-docker
 
 jobs:
   # delivery-pipeline
@@ -66,8 +67,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       APP_IMAGE_TAG: ${{ github.sha }}
-      APP_IMAGE_SRC: ${{ secrets.BC_IMAGE_REPO }}/${{ github.repository }}
-      APP_IMAGE: ${{ secrets.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
+      APP_IMAGE_SRC: ${BC_IMAGE_REPO}/${{ github.repository }}
+      APP_IMAGE: ${BC_IMAGE_REPO}/${{ github.repository }}:${{ github.sha }}
       ARTIFACT_FOLDER: ".artifacts"
       GITLEAKS_REPORT: ${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json
       IMAGE_SBOM: ${ARTIFACT_FOLDER}/sbom/sbom.json
