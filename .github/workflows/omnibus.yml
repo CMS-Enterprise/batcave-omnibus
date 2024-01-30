@@ -59,7 +59,9 @@ jobs:
 
   .with-current-image:
     # needs: delivery-pipeline
-    if: !(${{ startsWith(github.ref, 'refs/tags/v') }})
+    # TODO: Invert the following condition:
+    # if the current branch is not a tag, then run the pipeline
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     container:
       image: "${APP_IMAGE}"
@@ -118,16 +120,17 @@ jobs:
   grype:
     needs: .with-current-image
     runs-on: ubuntu-latest
-    if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
+    # TODO: Fix syntax on the following
+    # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
     env:
       GRYPE_CACHE_IMAGE: "${BC_IMAGE_REPO}/devops-pipelines/cache/grype/vulndb:latest"
     steps:
-    - uses: actions/checkout@v4.1.0
-    - run: oras pull ${GRYPE_CACHE_IMAGE}
-    - run: grype db import vulndb.tar.gz
-    - run: grype db check
-    - run: grype artifactory.cloud.cms.gov/docker/bkimminich/juice-shop -o json --file report.json
-    - run: cat report.json | jq .
+      - uses: actions/checkout@v4.1.0
+      - run: oras pull ${GRYPE_CACHE_IMAGE}
+      - run: grype db import vulndb.tar.gz
+      - run: grype db check
+      - run: grype artifactory.cloud.cms.gov/docker/bkimminich/juice-shop -o json --file report.json
+      - run: cat report.json | jq .
 
   # syft:
   #   needs: delivery-pipeline
