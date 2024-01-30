@@ -62,7 +62,7 @@ jobs:
     # needs: delivery-pipeline
     # TODO: Invert the following condition:
     # if the current branch is not a tag, then run the pipeline
-    if: startsWith(github.ref, 'refs/tags/v')
+    # if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     container:
       image: "${APP_IMAGE}"
