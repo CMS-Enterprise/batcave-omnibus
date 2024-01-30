@@ -57,7 +57,7 @@ jobs:
   #         echo "Release to GitLab..."
   #         # TODO: Call release-gitlab in pipeline triggers
 
-  .with-current-image:
+  _with-current-image:
     # needs: delivery-pipeline
     # TODO: Invert the following condition:
     # if the current branch is not a tag, then run the pipeline
@@ -118,7 +118,7 @@ jobs:
       #     # Add your Release Tool commands here
 
   grype:
-    needs: .with-current-image
+    needs: _with-current-image
     runs-on: ubuntu-latest
     # TODO: Fix syntax on the following
     # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
