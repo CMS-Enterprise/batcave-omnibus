@@ -64,17 +64,19 @@ jobs:
     # if the current branch is not a tag, then run the pipeline
     # if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+    container:
+      # image: ${{ secrets.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
+      image: "${APP_IMAGE}"
     env:
       BC_IMAGE_REPO: ${{ secrets.BC_ARTIFACTORY_URL }}/batcave-docker
       APP_IMAGE_TAG: ${{ github.sha }}
       APP_IMAGE_SRC: ${{ secrets.BC_IMAGE_REPO }}/${{ github.repository }}
-      APP_IMAGE: ${{ secrets.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
+      # APP_IMAGE: ${{ secrets.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
+      APP_IMAGE: ${APP_IMAGE_SRC}:${{ github.sha }}
       ARTIFACT_FOLDER: ".artifacts"
       GITLEAKS_REPORT: ${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json
       IMAGE_SBOM: ${ARTIFACT_FOLDER}/sbom/sbom.json
       COSIGN_EXPERIMENTAL: 1
-    container:
-      image: "${APP_IMAGE}"
     steps:
       - name: Concatenate values to environment file
         run: |
