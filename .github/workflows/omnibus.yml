@@ -24,6 +24,9 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: artifactory.cloud.cms.gov/batcave-docker/devops-pipelines/pipeline-tools/podman:v4.4.1-1
+      credentials:
+        username: ${{ secrets.BC_ARTIFACTORY_USERNAME }}
+        password: ${{ secrets.BC_ARTIFACTORY_AUTH }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
