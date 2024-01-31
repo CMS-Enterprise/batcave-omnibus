@@ -20,16 +20,21 @@ jobs:
   #
   # build the omnibus image with commit tag.
   # will only run when it's NOT a commit tag branch
-  # delivery-pipeline:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v2
+  delivery-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-  #     - name: Build the omnibus image with commit tag
-  #       run: |
-  #         echo "PUSH_LATEST=true" >> $GITHUB_ENV
-  #         # TODO: Call delivery-pipeline in pipeline triggers
+      - name: Build the omnibus image with commit tag
+        run: |
+          echo "PUSH_LATEST=true" >> $GITHUB_ENV
+          # TODO: Call delivery-pipeline in pipeline triggers
+
+  _with-omnibus:
+    runs-on: ubuntu-latest
+    container:
+      image: artifactory.cloud.cms.gov/batcave-docker/devops-pipelines/pipeline-tools/omnibus:v1.0.0
 
   # release-pipeline
   #
@@ -58,93 +63,94 @@ jobs:
   #         echo "Release to GitLab..."
   #         # TODO: Call release-gitlab in pipeline triggers
 
-  _with-current-image:
-    # needs: delivery-pipeline
-    # TODO: Invert the following condition:
-    # if the current branch is not a tag, then run the pipeline
-    # if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    container:
-      # image: "${APP_IMAGE}"
-      image: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
-    env:
-      BC_IMAGE_REPO: ${{ secrets.BC_ARTIFACTORY_URL }}/batcave-docker
-      APP_IMAGE_TAG: ${{ github.sha }}
-      APP_IMAGE_SRC: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}
-      # APP_IMAGE: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
-      APP_IMAGE: ${APP_IMAGE_SRC}:${{ github.sha }}
-      ARTIFACT_FOLDER: ".artifacts"
-      GITLEAKS_REPORT: ${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json
-      IMAGE_SBOM: ${ARTIFACT_FOLDER}/sbom/sbom.json
-      COSIGN_EXPERIMENTAL: 1
-    steps:
-      - id: string
-        uses: ASzc/change-string-case-action@v5
-        with:
-          string: ${{ github.repository }}
+  # _with-current-image:
+  #   # needs: delivery-pipeline
+  #   # TODO: Invert the following condition:
+  #   # if the current branch is not a tag, then run the pipeline
+  #   # if: startsWith(github.ref, 'refs/tags/v')
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     # image: "${APP_IMAGE}"
+  #     image: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
+  #   env:
+  #     BC_IMAGE_REPO: ${{ secrets.BC_ARTIFACTORY_URL }}/batcave-docker
+  #     APP_IMAGE_TAG: ${{ github.sha }}
+  #     APP_IMAGE_SRC: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}
+  #     # APP_IMAGE: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
+  #     APP_IMAGE: ${APP_IMAGE_SRC}:${{ github.sha }}
+  #     ARTIFACT_FOLDER: ".artifacts"
+  #     GITLEAKS_REPORT: ${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json
+  #     IMAGE_SBOM: ${ARTIFACT_FOLDER}/sbom/sbom.json
+  #     COSIGN_EXPERIMENTAL: 1
+  #   steps:
+  #     - id: string
+  #       uses: ASzc/change-string-case-action@v5
+  #       with:
+  #         string: ${{ github.repository }}
 
-      - name: Concatenate values to environment file
-        run: |
-          echo "APP_IMAGE=${{env.BC_IMAGE_REPO}}/${{ steps.string.outputs.lowercase }}:${{ github.sha }}"
-          echo "APP_IMAGE=${{env.BC_IMAGE_REPO}}/${{ steps.string.outputs.lowercase }}:${{ github.sha }}" >> $GITHUB_ENV
+  #     - name: Concatenate values to environment file
+  #       run: |
+  #         echo "APP_IMAGE=${{env.BC_IMAGE_REPO}}/${{ steps.string.outputs.lowercase }}:${{ github.sha }}"
+  #         echo "APP_IMAGE=${{env.BC_IMAGE_REPO}}/${{ steps.string.outputs.lowercase }}:${{ github.sha }}" >> $GITHUB_ENV
 
-      - name: Checkout code
-        uses: actions/checkout@v2
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
 
-      - name: Setup Docker
-        run: |
-          mkdir ~/.docker && echo ${{ secrets.BC_ARTIFACTORY_AUTH_JSON }} >> ~/.docker/config.json
-          run: echo 'BC_IMAGE_REPO: ${{ env.BC_IMAGE_REPO }}'
-      # - name: Run Grype
-      #   run: |
-      #     # Add your Grype commands here
+  #     - name: Setup Docker
+  #       run: |
+  #         mkdir ~/.docker && echo ${{ secrets.BC_ARTIFACTORY_AUTH_JSON }} >> ~/.docker/config.json
+  #         run: echo 'BC_IMAGE_REPO: ${{ env.BC_IMAGE_REPO }}'
 
-      # - name: Run Syft
-      #   run: |
-      #     # Add your Syft commands here
+  # - name: Run Grype
+  #   run: |
+  #     # Add your Grype commands here
 
-      # - name: Run Gitleaks
-      #   run: |
-      #     # Add your Gitleaks commands here
+  # - name: Run Syft
+  #   run: |
+  #     # Add your Syft commands here
 
-      # - name: Run Cosign and Crane
-      #   run: |
-      #     # Add your Cosign and Crane commands here
+  # - name: Run Gitleaks
+  #   run: |
+  #     # Add your Gitleaks commands here
 
-      # - name: Run Gatecheck
-      #   run: |
-      #     # Add your Gatecheck commands here
+  # - name: Run Cosign and Crane
+  #   run: |
+  #     # Add your Cosign and Crane commands here
 
-      # - name: Run S3upload
-      #   run: |
-      #     # Add your S3upload commands here
+  # - name: Run Gatecheck
+  #   run: |
+  #     # Add your Gatecheck commands here
 
-      # - name: Run Oras
-      #   run: |
-      #     # Add your Oras commands here
+  # - name: Run S3upload
+  #   run: |
+  #     # Add your S3upload commands here
 
-      # - name: Run Workflow Engine
-      #   run: |
-      #     # Add your Workflow Engine commands here
+  # - name: Run Oras
+  #   run: |
+  #     # Add your Oras commands here
 
-      # - name: Run Release Tool
-      #   run: |
-      #     # Add your Release Tool commands here
+  # - name: Run Workflow Engine
+  #   run: |
+  #     # Add your Workflow Engine commands here
 
-  grype:
-    needs: _with-current-image
-    runs-on: ubuntu-latest
-    # TODO: Fix syntax on the following
-    # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
-    env:
-      GRYPE_CACHE_IMAGE: "${BC_IMAGE_REPO}/devops-pipelines/cache/grype/vulndb:latest"
-    steps:
-      - uses: actions/checkout@v4.1.0
-      - run: oras pull ${GRYPE_CACHE_IMAGE}
-      - run: grype db import vulndb.tar.gz
-      - run: grype db check
-      - run: grype artifactory.cloud.cms.gov/docker/bkimminich/juice-shop -o json --file report.json
-      - run: cat report.json | jq .
+  # - name: Run Release Tool
+  #   run: |
+  #     # Add your Release Tool commands here
+
+  # grype:
+  #   needs: _with-current-image
+  #   runs-on: ubuntu-latest
+  #   # TODO: Fix syntax on the following
+  #   # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
+  #   env:
+  #     GRYPE_CACHE_IMAGE: "${BC_IMAGE_REPO}/devops-pipelines/cache/grype/vulndb:latest"
+  #   steps:
+  #     - uses: actions/checkout@v4.1.0
+  #     - run: oras pull ${GRYPE_CACHE_IMAGE}
+  #     - run: grype db import vulndb.tar.gz
+  #     - run: grype db check
+  #     - run: grype artifactory.cloud.cms.gov/docker/bkimminich/juice-shop -o json --file report.json
+  #     - run: cat report.json | jq .
 
   # syft:
   #   needs: delivery-pipeline
