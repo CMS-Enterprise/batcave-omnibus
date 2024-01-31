@@ -78,9 +78,15 @@ jobs:
       IMAGE_SBOM: ${ARTIFACT_FOLDER}/sbom/sbom.json
       COSIGN_EXPERIMENTAL: 1
     steps:
+      - id: string
+        uses: ASzc/change-string-case-action@v5
+        with:
+          string: ${{ github.repository }}
+
       - name: Concatenate values to environment file
         run: |
-          echo "APP_IMAGE=${{env.BC_IMAGE_REPO}}/${{ github.repository }}:${{ github.sha }}" >> $GITHUB_ENV
+          echo "APP_IMAGE=${{env.BC_IMAGE_REPO}}/${{ steps.string.outputs.lowercase }}:${{ github.sha }}"
+          echo "APP_IMAGE=${{env.BC_IMAGE_REPO}}/${{ steps.string.outputs.lowercase }}:${{ github.sha }}" >> $GITHUB_ENV
 
       - name: Checkout code
         uses: actions/checkout@v2
