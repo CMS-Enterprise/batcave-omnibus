@@ -56,7 +56,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          load: true
+          push: true
           tags: myimage:latest
       - name: Inspect
         run: |
