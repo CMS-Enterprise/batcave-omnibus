@@ -31,10 +31,10 @@ jobs:
           echo "PUSH_LATEST=true" >> $GITHUB_ENV
           # TODO: Call delivery-pipeline in pipeline triggers
 
-  _with-omnibus:
-    runs-on: ubuntu-latest
-    container:
-      image: artifactory.cloud.cms.gov/batcave-docker/devops-pipelines/pipeline-tools/omnibus:v1.0.0
+  # _with-omnibus:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: artifactory.cloud.cms.gov/batcave-docker/devops-pipelines/pipeline-tools/omnibus:v1.0.0
 
   # release-pipeline
   #
