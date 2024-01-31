@@ -1,6 +1,7 @@
 # TODO: clamAV, semgrep
 
-FROM artifactory.cloud.cms.gov/docker/golang:alpine3.19 as build
+# FROM artifactory.cloud.cms.gov/docker/golang:alpine3.19 as build
+FROM golang:alpine3.19 as build
 
 ARG GRYPE_VERSION=v0.74.3
 ARG SYFT_VERSION=v0.102.0
@@ -61,7 +62,8 @@ RUN git clone --branch ${WFE_VERSION} --depth=1 --single-branch https://github.c
 RUN cd batcave-workflow-engine && \
     go build -ldflags="-s -w" -o /usr/local/bin/workflow-engine ./cmd/workflow-engine
 
-FROM artifactory.cloud.cms.gov/docker/rust:alpine3.19 as build-just
+# FROM artifactory.cloud.cms.gov/docker/rust:alpine3.19 as build-just
+FROM rust:alpine3.19 as build-just
 
 RUN apk add musl-dev
 RUN cargo install just
