@@ -65,13 +65,13 @@ jobs:
     # if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     container:
-      image: ${{ secrets.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
       # image: "${APP_IMAGE}"
+      image: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
     env:
       BC_IMAGE_REPO: ${{ secrets.BC_ARTIFACTORY_URL }}/batcave-docker
       APP_IMAGE_TAG: ${{ github.sha }}
-      APP_IMAGE_SRC: ${{ secrets.BC_IMAGE_REPO }}/${{ github.repository }}
-      # APP_IMAGE: ${{ secrets.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
+      APP_IMAGE_SRC: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}
+      # APP_IMAGE: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
       APP_IMAGE: ${APP_IMAGE_SRC}:${{ github.sha }}
       ARTIFACT_FOLDER: ".artifacts"
       GITLEAKS_REPORT: ${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json
