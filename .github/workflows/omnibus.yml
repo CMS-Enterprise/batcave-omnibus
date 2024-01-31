@@ -22,14 +22,18 @@ jobs:
   # will only run when it's NOT a commit tag branch
   delivery-pipeline:
     runs-on: ubuntu-latest
+    container:
+      image: artifactory.cloud.cms.gov/batcave-docker/devops-pipelines/pipeline-tools/podman:v4.4.1-1
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # TODO: Call delivery-pipeline in pipeline triggers
       - name: Build the omnibus image with commit tag
         run: |
           echo "PUSH_LATEST=true" >> $GITHUB_ENV
-          # TODO: Call delivery-pipeline in pipeline triggers
+          mkdir ~/.docker && echo ${BC_ARTIFACTORY_AUTH_JSON} >> ~/.docker/config.json
+          podman version
 
   # _with-omnibus:
   #   runs-on: ubuntu-latest
