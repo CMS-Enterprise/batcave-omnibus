@@ -32,7 +32,7 @@ jobs:
       - name: Build the omnibus image with commit tag
         run: |
           echo "PUSH_LATEST=true" >> $GITHUB_ENV
-          mkdir ~/.docker && echo ${BC_ARTIFACTORY_AUTH_JSON} >> ~/.docker/config.json
+          mkdir ~/.docker && echo ${{ secrets.BC_ARTIFACTORY_AUTH_JSON }} >> ~/.docker/config.json
           podman version
 
   # _with-omnibus:
