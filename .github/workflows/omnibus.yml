@@ -58,9 +58,9 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.BC_DOCKERHUB_USERNAME }}/omnibus:latest
-      - name: Inspect
-        run: |
-          docker image inspect ${{ secrets.BC_DOCKERHUB_USERNAME }}/omnibus:latest
+      # - name: Inspect
+      #   run: |
+      #     docker image inspect ${{ secrets.BC_DOCKERHUB_USERNAME }}/omnibus:latest
 
   # _with-omnibus:
   #   runs-on: ubuntu-latest
