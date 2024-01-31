@@ -73,7 +73,7 @@ jobs:
         run: |
           echo "SOURCE_NAME = $SOURCE_NAME"
           echo "SOURCE_BRANCH = $SOURCE_BRANCH"
-          echo "SOURCE_TAG = $SOURCE_TAG"
+          echo "SOURCE_TAG=$SOURCE_TAG" >> $GITHUB_ENV
           echo "GITHUB_REF = $GITHUB_REF"
           echo "github.ref = ${{ github.ref }}"
         env:
@@ -86,7 +86,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ env.REPO_NAME }}:$SOURCE_TAG
+          tags: ghcr.io/${{ env.REPO_NAME }}:${{ env.SOURCE_TAG }}
 
       # TODO: Use GitHub container registry instead of dockerhup
       # - name: Inspect
