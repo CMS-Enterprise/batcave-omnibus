@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feat/*
+    tags:
       - "*"
   pull_request:
     branches:
