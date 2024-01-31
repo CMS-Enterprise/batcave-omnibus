@@ -133,7 +133,8 @@ RUN eval "$(opam env)" &&\
     # Sanity check
     /src/semgrep/_build/default/src/main/Main.exe -version
 
-FROM artifactory.cloud.cms.gov/docker/alpine:3.19.0 as final-base
+# FROM artifactory.cloud.cms.gov/docker/alpine:3.19.0 as final-base
+FROM alpine:3.19.0 as final-base
 
 RUN apk --no-cache add curl jq sqlite-libs git ca-certificates tzdata
 
