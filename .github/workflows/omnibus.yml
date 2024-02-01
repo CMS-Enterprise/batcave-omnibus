@@ -72,6 +72,7 @@ jobs:
           echo "2: SOURCE_TAG=${{ env.SOURCE_TAG }}"
           echo "SOURCE_TAG=$SOURCE_TAG" >> $GITHUB_ENV
           if [[ $SOURCE_TAG == /refs/head/* ]]; then
+            echo "2a: Setting source tag to latest"
             echo "SOURCE_TAG=latest" >> $GITHUB_ENV
           fi
           echo "3: SOURCE_TAG=${{ env.SOURCE_TAG }}"
