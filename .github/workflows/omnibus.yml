@@ -68,6 +68,7 @@ jobs:
         env:
           SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
         run: |
+          echo "GITHUB_REF_NAME=$GITHUB_REF_NAME"
           echo "1: SOURCE_TAG=$SOURCE_TAG"
           echo "2: SOURCE_TAG=${{ env.SOURCE_TAG }}"
           echo "SOURCE_TAG=$SOURCE_TAG" >> $GITHUB_ENV
