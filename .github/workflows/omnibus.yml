@@ -71,11 +71,11 @@ jobs:
           echo "1: SOURCE_TAG=$SOURCE_TAG"
           echo "2: SOURCE_TAG=${{ env.SOURCE_TAG }}"
           echo "SOURCE_TAG=$SOURCE_TAG" >> $GITHUB_ENV
-          if [ -z "$SOURCE_TAG" ]; then
+          if [[ $SOURCE_TAG == /refs/head/* ]]; then
             echo "SOURCE_TAG=latest" >> $GITHUB_ENV
           fi
-          echo "IMAGE_NAME=ghcr.io/${{ env.REPO_NAME }}:${{ env.SOURCE_TAG }}" >> $GITHUB_ENV
           echo "3: SOURCE_TAG=${{ env.SOURCE_TAG }}"
+          echo "IMAGE_NAME=ghcr.io/${{ env.REPO_NAME }}:${{ env.SOURCE_TAG }}" >> $GITHUB_ENV
           echo "IMAGE_NAME=${{ env.IMAGE_NAME }}"
       - name: Build Image
         uses: docker/build-push-action@v5
