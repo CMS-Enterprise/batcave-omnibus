@@ -67,6 +67,9 @@ jobs:
       - name: Set up the environment
         run: |
           echo "SOURCE_TAG=$SOURCE_TAG" >> $GITHUB_ENV
+          if [ -z "$SOURCE_TAG" ]; then
+            echo "SOURCE_TAG=latest" >> $GITHUB_ENV
+          fi
           echo "IMAGE_NAME=ghcr.io/${{ env.REPO_NAME }}:${{ env.SOURCE_TAG }}" >> $GITHUB_ENV
       - name: Build Image
         uses: docker/build-push-action@v5
