@@ -41,7 +41,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     outputs:
-      IMAGE_NAME: ${{ steps.build.outputs.IMAGE_NAME }}
+      IMAGE_NAME: ${{ steps.output.outputs.IMAGE_NAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -119,6 +119,7 @@ jobs:
         run: |
           echo "APP_IMAGE=${{ env.APP_IMAGE }}"
           echo "IMAGE_NAME=${{ env.IMAGE_NAME }}"
+          echo "GRYPE_CACHE_IMAGE=${{ env.GRYPE_CACHE_IMAGE }}"
       # - run: oras pull ${GRYPE_CACHE_IMAGE}
       # - run: grype db import vulndb.tar.gz
       # - run: grype db check
