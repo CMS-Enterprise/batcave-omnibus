@@ -49,7 +49,7 @@ jobs:
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Login to Docker Hub
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -93,7 +93,7 @@ jobs:
         run: |
           docker image inspect ${{ env.IMAGE_NAME }}
       - id: output
-        run: echo "IMAGE_NAME=$${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
+        run: echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
 
   grype:
     needs: build-and-push
@@ -105,11 +105,10 @@ jobs:
       BC_IMAGE_REPO: ${{ secrets.BC_ARTIFACTORY_URL }}/batcave-docker
       APP_IMAGE_TAG: ${{ github.sha }}
       APP_IMAGE_SRC: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}
-      # APP_IMAGE: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
-      APP_IMAGE: ${APP_IMAGE_SRC}:${{ github.sha }}
+      APP_IMAGE: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
       ARTIFACT_FOLDER: ".artifacts"
-      GITLEAKS_REPORT: ${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json
-      IMAGE_SBOM: ${ARTIFACT_FOLDER}/sbom/sbom.json
+      GITLEAKS_REPORT: ".artifacts/gitleaks/gitleaks_report.json"
+      IMAGE_SBOM: ".artifacts/sbom/sbom.json"
       COSIGN_EXPERIMENTAL: 1
       GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/devops-pipelines/cache/grype/vulndb:latest"
     steps:
@@ -120,11 +119,47 @@ jobs:
           echo "APP_IMAGE=${{ env.APP_IMAGE }}"
           echo "IMAGE_NAME=${{ env.IMAGE_NAME }}"
           echo "GRYPE_CACHE_IMAGE=${{ env.GRYPE_CACHE_IMAGE }}"
+      # TODO: Add these steps when there is access to artifactory
       # - run: oras pull ${GRYPE_CACHE_IMAGE}
       # - run: grype db import vulndb.tar.gz
       # - run: grype db check
       # - run: grype artifactory.cloud.cms.gov/docker/bkimminich/juice-shop -o json --file report.json
       # - run: cat report.json | jq .
+
+  syft:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.build-and-push.outputs.IMAGE_NAME }}
+    # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
+    env:
+      IMAGE_NAME: ${{ needs.build-and-push.outputs.IMAGE_NAME }}
+      TEMPLATE_VERSION: main
+      FETCH_SAST_ARTIFACTS: "false"
+      APP_IMAGE_TAG: ${{ github.sha }}
+      APP_IMAGE_SRC: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}
+      APP_IMAGE: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
+      ARTIFACT_FOLDER: ".artifacts"
+      GITLEAKS_REPORT: ".artifacts/gitleaks/gitleaks_report.json"
+      IMAGE_SBOM: ".artifacts/sbom/sbom.json"
+      COSIGN_EXPERIMENTAL: 1
+    steps:
+      - uses: actions/checkout@v4.1.0
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.BC_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.BC_DOCKERHUB_PASSWORD }}
+      # - run: mkdir ~/.docker && echo $BC_ARTIFACTORY_AUTH_JSON >> ~/.docker/config.json
+      - run: syft version
+      - run: syft hub.docker.com/bkimminich/juice-shop-ctf --scope=squashed -o json --file ${IMAGE_SBOM}
+      - run: cat ${IMAGE_SBOM}
 
   # _with-omnibus:
   #   runs-on: ubuntu-latest
