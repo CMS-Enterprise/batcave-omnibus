@@ -68,17 +68,19 @@ jobs:
         env:
           SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
         run: |
-          echo "SOURCE_TAG=$GITHUB_REF_NAME" | tr \/ _ >> $GITHUB_ENV
-          echo "GITHUB_ENV=$GITHUB_ENV"
+          echo "SOURCE_TAG=$GITHUB_REF_NAME" | tr \/ _
           echo "1: SOURCE_TAG=$SOURCE_TAG"
-          echo "2: SOURCE_TAG=${{ env.SOURCE_TAG }}"
           echo "SOURCE_TAG=$SOURCE_TAG" >> $GITHUB_ENV
-          if [[ $SOURCE_TAG == refs/heads/* ]]; then
-            echo "2a: Setting source tag to latest"
+          if [[ $GITHUB_REF == refs/heads/* ]]; then
+            echo "2: Setting source tag to latest"
             echo "SOURCE_TAG=latest" >> $GITHUB_ENV
           fi
-          echo "3: SOURCE_TAG=${{ env.SOURCE_TAG }}"
+          echo "3: SOURCE_TAG=$SOURCE_TAG"
           echo "IMAGE_NAME=ghcr.io/${{ env.REPO_NAME }}:${{ env.SOURCE_TAG }}" >> $GITHUB_ENV
+          echo "IMAGE_NAME=$IMAGE_NAME"
+      - name: Print environment
+        run: |
+          echo "SOURCE_TAG=${{ env.SOURCE_TAG }}"
           echo "IMAGE_NAME=${{ env.IMAGE_NAME }}"
       - name: Build Image
         uses: docker/build-push-action@v5
