@@ -40,6 +40,8 @@ jobs:
 
   build-and-push:
     runs-on: ubuntu-latest
+    outputs:
+      IMAGE_NAME: ${{ steps.build.outputs.IMAGE_NAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -90,6 +92,8 @@ jobs:
       - name: Inspect
         run: |
           docker image inspect ${{ env.IMAGE_NAME }}
+      - id: output
+        run: echo "IMAGE_NAME=$${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
 
   grype:
     needs: build-and-push
@@ -97,6 +101,7 @@ jobs:
     # TODO: Fix syntax on the following
     # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
     env:
+      IMAGE_NAME: ${{ needs.build-and-push.outputs.IMAGE_NAME }}
       BC_IMAGE_REPO: ${{ secrets.BC_ARTIFACTORY_URL }}/batcave-docker
       APP_IMAGE_TAG: ${{ github.sha }}
       APP_IMAGE_SRC: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}
