@@ -129,8 +129,8 @@ jobs:
   syft:
     needs: build-and-push
     runs-on: ubuntu-latest
-    container:
-      image: ${{ needs.build-and-push.outputs.IMAGE_NAME }}
+    # container:
+    #   image: ${{ needs.build-and-push.outputs.IMAGE_NAME }}
     # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
     env:
       IMAGE_NAME: ${{ needs.build-and-push.outputs.IMAGE_NAME }}
