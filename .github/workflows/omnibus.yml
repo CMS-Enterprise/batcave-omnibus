@@ -68,12 +68,12 @@ jobs:
         env:
           SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
         run: |
-          echo "SOURCE_TAG=$GITHUB_REF_NAME" | tr / _ >> $GITHUB_ENV
+          echo "SOURCE_TAG=$GITHUB_REF_NAME" | tr \/ _ >> $GITHUB_ENV
           echo "GITHUB_ENV=$GITHUB_ENV"
           echo "1: SOURCE_TAG=$SOURCE_TAG"
           echo "2: SOURCE_TAG=${{ env.SOURCE_TAG }}"
           echo "SOURCE_TAG=$SOURCE_TAG" >> $GITHUB_ENV
-          if [[ $SOURCE_TAG == /refs/head/* ]]; then
+          if [[ $SOURCE_TAG == refs/head/* ]]; then
             echo "2a: Setting source tag to latest"
             echo "SOURCE_TAG=latest" >> $GITHUB_ENV
           fi
