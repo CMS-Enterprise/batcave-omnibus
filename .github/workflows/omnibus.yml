@@ -60,25 +60,22 @@ jobs:
       - name: Convert repository name to lowercase
         run: |
           echo "REPO_NAME=${{ steps.string.outputs.lowercase }}" >> $GITHUB_ENV
-      - name: Branch name
-        id: branch_name
-        run: |
-          echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
+      # - name: Branch name
+      #   id: branch_name
+      #   run: |
+      #     echo SOURCE_TAG=${GITHUB_REF#refs/tags/} >> $GITHUB_OUTPUT
       - name: Set up the environment
-        env:
-          SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
+        # env:
+        #   SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
         run: |
-          echo "1: SOURCE_TAG=$SOURCE_TAG"
           if [[ $GITHUB_REF == refs/heads/* ]]; then
-            echo "2: Setting source tag to latest"
+            echo "Setting source tag to latest"
             echo "SOURCE_TAG=latest" >> $GITHUB_ENV
             echo "IMAGE_NAME=ghcr.io/${{ env.REPO_NAME }}:latest" >> $GITHUB_ENV
           else
             echo "SOURCE_TAG=$GITHUB_REF_NAME" | tr \/ - >> $GITHUB_ENV
             echo "IMAGE_NAME=ghcr.io/${{ env.REPO_NAME }}:$GITHUB_REF_NAME" >> $GITHUB_ENV
           fi
-          echo "3: SOURCE_TAG=$SOURCE_TAG"
-          echo "IMAGE_NAME=$IMAGE_NAME"
       - name: Print environment
         run: |
           echo "SOURCE_TAG=${{ env.SOURCE_TAG }}"
