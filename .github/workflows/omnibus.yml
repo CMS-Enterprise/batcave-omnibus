@@ -68,15 +68,16 @@ jobs:
         env:
           SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
         run: |
-          echo "SOURCE_TAG=$GITHUB_REF_NAME" | tr \/ -
-          echo "SOURCE_TAG=$GITHUB_REF_NAME" | tr \/ - >> $GITHUB_ENV
           echo "1: SOURCE_TAG=$SOURCE_TAG"
           if [[ $GITHUB_REF == refs/heads/* ]]; then
             echo "2: Setting source tag to latest"
             echo "SOURCE_TAG=latest" >> $GITHUB_ENV
+            echo "IMAGE_NAME=ghcr.io/${{ env.REPO_NAME }}:latest" >> $GITHUB_ENV
+          else
+            echo "SOURCE_TAG=$GITHUB_REF_NAME" | tr \/ - >> $GITHUB_ENV
+            echo "IMAGE_NAME=ghcr.io/${{ env.REPO_NAME }}:$GITHUB_REF_NAME" >> $GITHUB_ENV
           fi
           echo "3: SOURCE_TAG=$SOURCE_TAG"
-          echo "IMAGE_NAME=ghcr.io/${{ env.REPO_NAME }}:${{ env.SOURCE_TAG }}" >> $GITHUB_ENV
           echo "IMAGE_NAME=$IMAGE_NAME"
       - name: Print environment
         run: |
