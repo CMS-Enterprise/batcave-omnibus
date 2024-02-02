@@ -17,18 +17,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Restore image layer cache
-        uses: actions/cache/restore@v4
-        with:
-          path: ./container-cache-in
-          key: ${{ runner.os }}-
-          restore-keys: |
-            layers-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('Dockerfile') }}
-            layers-${{ runner.os }}-${{ github.ref }}
-            layers-${{ runner.os }}
+      # In order to support caching we need to make sure we are using the docker-container driver for builds
+      # - name: Restore image layer cache
+      #   uses: actions/cache/restore@v4
+      #   with:
+      #     path: ./container-cache-in
+      #     key: ${{ runner.os }}-
+      #     restore-keys: |
+      #       layers-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('Dockerfile') }}
+      #       layers-${{ runner.os }}-${{ github.ref }}
+      #       layers-${{ runner.os }}
 
       # TODO combine all delivery jobs into a single action
       - name: Build container image
@@ -39,15 +37,15 @@ jobs:
           dockerfile: ./Dockerfile
           # TODO: add support for mixed case to workflow-engine (i.e. we should force container image tags to lowercase)
           image_tag: ghcr.io/cms-enterprise/batcave/omnibus:v1.1.0-rc1
-          cache_from: ./container-cache-in
-          cache_to: ./container-cache-out
+          # cache_from: ./container-cache-in
+          # cache_to: ./container-cache-out
           repo_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Save image layer cache
-        uses: actions/cache/save@v4
-        with:
-          path: ./container-cache-out
-          key: layers-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('Dockerfile') }}
+      # - name: Save image layer cache
+      #   uses: actions/cache/save@v4
+      #   with:
+      #     path: ./container-cache-out
+      #     key: layers-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('Dockerfile') }}
 
       - name: Scan container image
         uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-scan@wip-build-image-action
@@ -62,6 +60,7 @@ jobs:
         # if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         shell: bash
         run: docker push ghcr.io/cms-enterprise/batcave/omnibus:v1.1.0-rc1
+
       - name: Archive image scan outputs
         uses: actions/upload-artifact@v4
         with:
