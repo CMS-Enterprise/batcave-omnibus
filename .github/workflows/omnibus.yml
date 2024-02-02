@@ -119,7 +119,7 @@ jobs:
         run: docker load < /tmp/myimage.tar
 
   grype:
-    needs: load-image
+    needs: [build-image, load-image]
     runs-on: ubuntu-latest
     container:
       image: ${{ needs.build-image.outputs.IMAGE_NAME }}
@@ -164,7 +164,7 @@ jobs:
       # - run: cat report.json | jq .
 
   syft:
-    needs: load-image
+    needs: [build-image, load-image]
     runs-on: ubuntu-latest
     container:
       image: ${{ needs.build-image.outputs.IMAGE_NAME }}
