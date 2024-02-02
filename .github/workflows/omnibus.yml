@@ -1,5 +1,5 @@
 name: Build Omnibus
-run-name: Building Omnibus Applications
+run-name: "Building Omnibus Image: ${{ github.event.head_commit.message }}"
 on:
   push:
     branches:
@@ -11,11 +11,63 @@ on:
     branches:
       - main
 
-env:
-  TEMPLATE_VERSION: "main"
-  FETCH_SAST_ARTIFACTS: "false"
-
 jobs:
+  delivery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # In order to support caching we need to make sure we are using the docker-container driver for builds
+      # - name: Restore image layer cache
+      #   uses: actions/cache/restore@v4
+      #   with:
+      #     path: ./container-cache-in
+      #     key: ${{ runner.os }}-
+      #     restore-keys: |
+      #       layers-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('Dockerfile') }}
+      #       layers-${{ runner.os }}-${{ github.ref }}
+      #       layers-${{ runner.os }}
+
+      # TODO combine all delivery jobs into a single action
+      - name: Build container image
+        uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-build@feat/github-actions
+        with:
+          path: .
+          # TODO: the dockerfile path should be relative to the context path
+          dockerfile: ./Dockerfile
+          # TODO: add support for mixed case to workflow-engine (i.e. we should force container image tags to lowercase)
+          image_tag: ghcr.io/cms-enterprise/batcave/omnibus:v1.1.0-rc1
+          # cache_from: ./container-cache-in
+          # cache_to: ./container-cache-out
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Save image layer cache
+      #   uses: actions/cache/save@v4
+      #   with:
+      #     path: ./container-cache-out
+      #     key: layers-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('Dockerfile') }}
+
+      - name: Scan container image
+        uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-scan@feat/github-actions
+        with:
+          image_tag: ghcr.io/cms-enterprise/batcave/omnibus:v1.1.0-rc1
+          output_dir: ./artifacts
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # TODO: this should be something workflow-engine does as apart of the delivery pipeline
+      - name: Push image
+        # TODO: in the future push based on protected git tags
+        # if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        shell: bash
+        run: docker push ghcr.io/cms-enterprise/batcave/omnibus:v1.1.0-rc1
+
+      - name: Archive image scan outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-scan-results
+          path: ./artifacts/*.json
+          if-no-files-found: error
+
   # delivery-pipeline
   #
   # build the omnibus image with commit tag.
