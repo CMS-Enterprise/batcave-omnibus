@@ -137,6 +137,15 @@ jobs:
       COSIGN_EXPERIMENTAL: 1
       GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/devops-pipelines/cache/grype/vulndb:latest"
     steps:
+      # - uses: actions/checkout@v4
+      # - uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/build-image@wip-build-image-action
+      #   with:
+      #     path: ./go-server/
+      #     # TODO: the dockerfile path should be relative to the context path
+      #     dockerfile: ./go-server/Dockerfile
+      #     # TODO: add support for mixed case to workflow-engine (i.e. we should force container image tags to lowercase)
+      #     image_tag: cms-enterprise/batcave/knight-light-go-server:testing
+      #     repo_token: ${{ secrets.GITHUB_TOKEN }}
       # - name: Checkout
       #   uses: actions/checkout@v4
       # - name: Set up Docker Buildx
@@ -155,7 +164,7 @@ jobs:
           echo "APP_IMAGE=${{ env.APP_IMAGE }}"
           echo "IMAGE_NAME=${{ env.IMAGE_NAME }}"
           echo "GRYPE_CACHE_IMAGE=${{ env.GRYPE_CACHE_IMAGE }}"
-          docker run --entrypoint=/bin/bash my_image -c 'grype version'
+          docker run --entrypoint=/bin/bash ${{ env.IMAGE_NAME }} -c 'grype version'
       # TODO: Add these steps when there is access to artifactory
       # - run: oras pull ${GRYPE_CACHE_IMAGE}
       # - run: grype db import vulndb.tar.gz
