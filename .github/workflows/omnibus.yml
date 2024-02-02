@@ -126,7 +126,7 @@ jobs:
     # TODO: Fix syntax on the following
     # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
     env:
-      IMAGE_NAME: ${{ needs.build-and-push.outputs.IMAGE_NAME }}
+      IMAGE_NAME: ${{ needs.build-image.outputs.IMAGE_NAME }}
       BC_IMAGE_REPO: ghcr.io/batcave-docker
       APP_IMAGE_TAG: ${{ github.sha }}
       APP_IMAGE_SRC: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}
@@ -164,13 +164,13 @@ jobs:
       # - run: cat report.json | jq .
 
   syft:
-    needs: build-and-push
+    needs: load-image
     runs-on: ubuntu-latest
-    # container:
-    #   image: ${{ needs.build-and-push.outputs.IMAGE_NAME }}
+    container:
+      image: ${{ needs.build-image.outputs.IMAGE_NAME }}
     # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
     env:
-      IMAGE_NAME: ${{ needs.build-and-push.outputs.IMAGE_NAME }}
+      IMAGE_NAME: ${{ needs.build-image.outputs.IMAGE_NAME }}
       TEMPLATE_VERSION: main
       FETCH_SAST_ARTIFACTS: "false"
       APP_IMAGE_TAG: ${{ github.sha }}
