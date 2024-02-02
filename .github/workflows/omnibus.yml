@@ -65,7 +65,7 @@ jobs:
       - name: Set up the environment
         run: |
           if [[ $GITHUB_REF == refs/heads/* ]]; then
-            echo "IMAGE_NAME=ghcr.io/${{ env.REPO_NAME }}:latest" >> $GITHUB_ENV
+            echo "IMAGE_NAME=${{ env.REPO_NAME }}:latest" >> $GITHUB_ENV
           else
             echo "IMAGE_NAME=ghcr.io/${{ env.REPO_NAME }}:$GITHUB_REF_NAME" >> $GITHUB_ENV
           fi
