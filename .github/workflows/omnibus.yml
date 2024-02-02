@@ -155,7 +155,7 @@ jobs:
           echo "APP_IMAGE=${{ env.APP_IMAGE }}"
           echo "IMAGE_NAME=${{ env.IMAGE_NAME }}"
           echo "GRYPE_CACHE_IMAGE=${{ env.GRYPE_CACHE_IMAGE }}"
-          grype version
+          docker run --entrypoint=/bin/bash my_image -c 'grype version'
       # TODO: Add these steps when there is access to artifactory
       # - run: oras pull ${GRYPE_CACHE_IMAGE}
       # - run: grype db import vulndb.tar.gz
