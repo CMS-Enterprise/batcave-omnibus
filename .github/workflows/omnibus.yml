@@ -38,33 +38,33 @@ jobs:
   #         mkdir ~/.docker && echo ${{ secrets.BC_ARTIFACTORY_AUTH_JSON }} >> ~/.docker/config.json
   #         podman version
 
-  delivery:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      # TODO combine all delivery jobs into a single action
-      - name: Build container image
-        uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-build@wip-build-image-action
-        with:
-          path: .
-          # TODO: the dockerfile path should be relative to the context path
-          dockerfile: ./Dockerfile
-          # TODO: add support for mixed case to workflow-engine (i.e. we should force container image tags to lowercase)
-          image_tag: cms-enterprise/batcave/omnibus:testing
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Scan container image
-        uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-scan@wip-build-image-action
-        with:
-          # TODO: add support for mixed case to workflow-engine (i.e. we should force container image tags to lowercase)
-          image_tag: cms-enterprise/batcave/omnibus:testing
-          output_dir: ./artifacts
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Archive image scan outputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: image-scan-results
-          path: ./artifacts/*.json
-          if-no-files-found: error
+  # delivery:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     # TODO combine all delivery jobs into a single action
+  #     - name: Build container image
+  #       uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-build@wip-build-image-action
+  #       with:
+  #         path: .
+  #         # TODO: the dockerfile path should be relative to the context path
+  #         dockerfile: ./Dockerfile
+  #         # TODO: add support for mixed case to workflow-engine (i.e. we should force container image tags to lowercase)
+  #         image_tag: cms-enterprise/batcave/omnibus:testing
+  #         repo_token: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Scan container image
+  #       uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-scan@wip-build-image-action
+  #       with:
+  #         # TODO: add support for mixed case to workflow-engine (i.e. we should force container image tags to lowercase)
+  #         image_tag: cms-enterprise/batcave/omnibus:testing
+  #         output_dir: ./artifacts
+  #         repo_token: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Archive image scan outputs
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: image-scan-results
+  #         path: ./artifacts/*.json
+  #         if-no-files-found: error
 
   build-image:
     runs-on: ubuntu-latest
@@ -192,7 +192,7 @@ jobs:
       # - run: cat report.json | jq .
 
   syft:
-    needs: [build-image, load-image]
+    needs: [build-image]
     runs-on: ubuntu-latest
     # container:
     #   image: ${{ needs.build-image.outputs.IMAGE_NAME }}
@@ -209,7 +209,7 @@ jobs:
       IMAGE_SBOM: ".artifacts/sbom/sbom.json"
       COSIGN_EXPERIMENTAL: 1
     steps:
-      - uses: actions/checkout@v4.1.0
+      # - uses: actions/checkout@v4.1.0
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
