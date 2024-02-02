@@ -30,7 +30,7 @@ jobs:
 
       # TODO combine all delivery jobs into a single action
       - name: Build container image
-        uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-build@wip-build-image-action
+        uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-build@feat/github-actions
         with:
           path: .
           # TODO: the dockerfile path should be relative to the context path
@@ -48,7 +48,7 @@ jobs:
       #     key: layers-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('Dockerfile') }}
 
       - name: Scan container image
-        uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-scan@wip-build-image-action
+        uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-scan@feat/github-actions
         with:
           image_tag: ghcr.io/cms-enterprise/batcave/omnibus:v1.1.0-rc1
           output_dir: ./artifacts
