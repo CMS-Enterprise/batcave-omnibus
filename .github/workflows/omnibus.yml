@@ -194,7 +194,7 @@ jobs:
           name: myimage
           path: /tmp/myimage.tar
       - name: Push Image if tag
-        if: startsWith(github.ref, 'refs/tags/v')
+        # if: startsWith(github.ref, 'refs/tags/v')
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -205,6 +205,7 @@ jobs:
         run: |
           docker image inspect ${{ env.IMAGE_NAME }}
       - id: output
+        name: Set the output
         run: echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
 
   load-image:
@@ -227,7 +228,7 @@ jobs:
     # TODO: Fix syntax on the following
     # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
     env:
-      IMAGE_NAME: ${{ needs.build-image.outputs.IMAGE_NAME }}
+      IMAGE_NAME: ${{ needs.delivery.outputs.IMAGE_NAME }}
       BC_IMAGE_REPO: ghcr.io/batcave-docker
       APP_IMAGE_TAG: ${{ github.sha }}
       APP_IMAGE_SRC: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}
@@ -238,11 +239,10 @@ jobs:
       COSIGN_EXPERIMENTAL: 1
       GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/devops-pipelines/cache/grype/vulndb:latest"
     steps:
-      # - name: Checkout
-      #   uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
       # - name: Set up Docker Buildx
       #   uses: docker/setup-buildx-action@v1
-
       # - name: Download artifact
       #   uses: actions/download-artifact@v3
       #   with:
@@ -254,7 +254,6 @@ jobs:
       #     docker image ls -a
       - name: Test Grype
         run: |
-          echo "APP_IMAGE=${{ env.APP_IMAGE }}"
           echo "IMAGE_NAME=${{ env.IMAGE_NAME }}"
           echo "GRYPE_CACHE_IMAGE=${{ env.GRYPE_CACHE_IMAGE }}"
           grype version
@@ -269,8 +268,8 @@ jobs:
   syft:
     needs: [build-image]
     runs-on: ubuntu-latest
-    # container:
-    #   image: ${{ needs.build-image.outputs.IMAGE_NAME }}
+    container:
+      image: ${{ needs.build-image.outputs.IMAGE_NAME }}
     # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
     env:
       IMAGE_NAME: ${{ needs.build-image.outputs.IMAGE_NAME }}
@@ -296,18 +295,23 @@ jobs:
         with:
           username: ${{ secrets.BC_DOCKERHUB_USERNAME }}
           password: ${{ secrets.BC_DOCKERHUB_PASSWORD }}
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: myimage
-          path: /tmp
-      - name: Load Docker image
-        # - run: mkdir ~/.docker && echo $BC_ARTIFACTORY_AUTH_JSON >> ~/.docker/config.json
+      # - name: Download artifact
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: myimage
+      #     path: /tmp
+      # - name: Load Docker image
+      #   # - run: mkdir ~/.docker && echo $BC_ARTIFACTORY_AUTH_JSON >> ~/.docker/config.json
+      #   run: |
+      #     docker load --input /tmp/myimage.tar
+      #     docker image ls -a
+      #     docker run --entrypoint=/bin/sh ${{ env.IMAGE_NAME }} -c 'syft version'
+      #     docker run --entrypoint=/bin/sh ${{ env.IMAGE_NAME }} -c 'syft hub.docker.com/bkimminich/juice-shop-ctf --scope=squashed -o json --file ${IMAGE_SBOM}; cat ${IMAGE_SBOM}'
+      - name: Test Syft
         run: |
-          docker load --input /tmp/myimage.tar
-          docker image ls -a
-          docker run --entrypoint=/bin/sh ${{ env.IMAGE_NAME }} -c 'syft version'
-          docker run --entrypoint=/bin/sh ${{ env.IMAGE_NAME }} -c 'syft hub.docker.com/bkimminich/juice-shop-ctf --scope=squashed -o json --file ${IMAGE_SBOM}; cat ${IMAGE_SBOM}'
+          syft version
+          syft hub.docker.com/bkimminich/juice-shop-ctf --scope=squashed -o json --file ${IMAGE_SBOM}
+          cat ${IMAGE_SBOM}
 
   # _with-omnibus:
   #   runs-on: ubuntu-latest
