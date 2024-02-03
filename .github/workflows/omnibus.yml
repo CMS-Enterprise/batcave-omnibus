@@ -14,6 +14,8 @@ on:
 jobs:
   delivery:
     runs-on: ubuntu-latest
+    outputs:
+      IMAGE_NAME: ${{ steps.output.outputs.IMAGE_NAME }}
     steps:
       - uses: actions/checkout@v4
 
@@ -87,7 +89,9 @@ jobs:
           if-no-files-found: error
 
       - id: output
-        run: echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
+        run: |
+          echo "IMAGE_NAME=${{ env.IMAGE_NAME }}"
+          echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
 
   # delivery-pipeline
   #
