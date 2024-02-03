@@ -40,7 +40,7 @@ jobs:
       - name: Set up the environment
         run: |
           if [[ $GITHUB_REF == refs/heads/* ]]; then
-            echo "IMAGE_NAME=ghcr.io/${{ env.REPO_NAME }}:latest" >> $GITHUB_ENV
+            echo "IMAGE_NAME=ghcr.io/${{ env.REPO_NAME }}:testing" >> $GITHUB_ENV
           else
             echo "IMAGE_NAME=ghcr.io/${{ env.REPO_NAME }}:$GITHUB_REF_NAME" >> $GITHUB_ENV
           fi
@@ -183,14 +183,14 @@ jobs:
     # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
     env:
       IMAGE_NAME: ${{ needs.delivery.outputs.IMAGE_NAME }}
-      BC_IMAGE_REPO: ghcr.io/batcave-docker
-      APP_IMAGE_TAG: ${{ github.sha }}
-      APP_IMAGE_SRC: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}
-      APP_IMAGE: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
-      ARTIFACT_FOLDER: ".artifacts"
-      GITLEAKS_REPORT: ".artifacts/gitleaks/gitleaks_report.json"
-      IMAGE_SBOM: ".artifacts/sbom/sbom.json"
-      COSIGN_EXPERIMENTAL: 1
+      # BC_IMAGE_REPO: ghcr.io/batcave-docker
+      # APP_IMAGE_TAG: ${{ github.sha }}
+      # APP_IMAGE_SRC: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}
+      # APP_IMAGE: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
+      # ARTIFACT_FOLDER: ".artifacts"
+      # GITLEAKS_REPORT: ".artifacts/gitleaks/gitleaks_report.json"
+      # IMAGE_SBOM: ".artifacts/sbom/sbom.json"
+      # COSIGN_EXPERIMENTAL: 1
       GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/devops-pipelines/cache/grype/vulndb:latest"
     steps:
       - name: Checkout
@@ -215,15 +215,7 @@ jobs:
     # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
     env:
       IMAGE_NAME: ${{ needs.delivery.outputs.IMAGE_NAME }}
-      TEMPLATE_VERSION: main
-      FETCH_SAST_ARTIFACTS: "false"
-      APP_IMAGE_TAG: ${{ github.sha }}
-      APP_IMAGE_SRC: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}
-      APP_IMAGE: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
-      ARTIFACT_FOLDER: ".artifacts"
-      GITLEAKS_REPORT: ".artifacts/gitleaks/gitleaks_report.json"
       IMAGE_SBOM: ".artifacts/sbom/sbom.json"
-      COSIGN_EXPERIMENTAL: 1
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -256,6 +248,24 @@ jobs:
       # Since this container does not contain docker, we need to create an image for juice shop and use it here
       # syft hub.docker.com/bkimminich/juice-shop-ctf --scope=squashed -o json --file ${IMAGE_SBOM}
       # cat ${IMAGE_SBOM}
+
+  gitleaks:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      ARTIFACT_FOLDER: ".artifacts"
+      GITLEAKS_REPORT: ".artifacts/gitleaks/gitleaks_report.json"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - run: git config --global --add safe.directory '*'
+      - run: git clone https://github.com/juice-shop/juice-shop.git
+      - run: mkdir -p ${{ env.ARTIFACT_FOLDER }}/gitleaks
+      - run: touch ${GITLEAKS_REPORT}
+      - run: echo "Starting Gitleaks Secrets Scan"
+      - run: gitleaks detect --exit-code 0 --verbose --source juice-shop --report-format json --report-path ${GITLEAKS_REPORT}
 
   # _with-omnibus:
   #   runs-on: ubuntu-latest
