@@ -257,12 +257,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - run: git config --global --add safe.directory '*'
-      - run: git clone https://github.com/juice-shop/juice-shop.git
-      - run: mkdir -p ${{ env.ARTIFACT_FOLDER }}/gitleaks
-      - run: touch ${GITLEAKS_REPORT}
-      - run: echo "Starting Gitleaks Secrets Scan"
-      - run: gitleaks detect --exit-code 0 --verbose --source juice-shop --report-format json --report-path ${GITLEAKS_REPORT}
+      - name: Test GitLeaks
+        run: |
+          git config --global --add safe.directory '*'
+          git clone https://github.com/juice-shop/juice-shop.git
+          mkdir -p ${{ env.ARTIFACT_FOLDER }}/gitleaks
+          touch ${GITLEAKS_REPORT}
+          echo "Starting Gitleaks Secrets Scan"
+          gitleaks detect --exit-code 0 --verbose --source juice-shop --report-format json --report-path ${GITLEAKS_REPORT}
 
   cosign-crane:
     needs: [delivery]
@@ -281,12 +283,155 @@ jobs:
       # COSIGN_EXPERIMENTAL: 1
     steps:
       - uses: actions/checkout@v4.1.0
-      - run: cosign version
-      - run: crane version
-      - run: export TARGET_IMAGE=$(crane digest --full-ref ${APP_IMAGE})
-      - run: echo "Application Image Digest -> ${TARGET_IMAGE}"
-      - run: echo "Signing image using cosign with OIDC token"
-      - run: cosign sign --identity-token=$(cat /var/run/secrets/eks.amazonaws.com/serviceaccount/token) ${TARGET_IMAGE}
+      - name: Test Cosign/Crane
+        run: |
+          cosign version
+          crane version
+          export TARGET_IMAGE=$(crane digest --full-ref ${APP_IMAGE})
+          echo "Application Image Digest -> ${TARGET_IMAGE}"
+          echo "Signing image using cosign with OIDC token"
+        # TODO: Add the following when I figure out where this token comes from
+        # cosign sign --identity-token=$(cat /var/run/secrets/eks.amazonaws.com/serviceaccount/token) ${TARGET_IMAGE}
+
+  gatecheck:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    # env:
+    #   TEMPLATE_VERSION: main
+    #   FETCH_SAST_ARTIFACTS: 'false'
+    #   APP_IMAGE_TAG: "${{ github.sha }}"
+    #   APP_IMAGE_SRC: "${BC_IMAGE_REPO}/${{ github.repository }}"
+    #   APP_IMAGE: "${APP_IMAGE_SRC}:${APP_IMAGE_TAG}"
+    #   ARTIFACT_FOLDER: ".artifacts"
+    #   GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
+    #   IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
+    #   COSIGN_EXPERIMENTAL: 1
+    steps:
+      - uses: actions/checkout@v4.1.0
+      - name: Test Gatecheck
+        run: |
+          gatecheck version
+          gatecheck config info
+
+  s3upload:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      # TEMPLATE_VERSION: main
+      # FETCH_SAST_ARTIFACTS: "false"
+      # APP_IMAGE_TAG: "${{ github.sha }}"
+      # APP_IMAGE_SRC: "${BC_IMAGE_REPO}/${{ github.repository }}"
+      # APP_IMAGE: "${APP_IMAGE_SRC}:${APP_IMAGE_TAG}"
+      # ARTIFACT_FOLDER: ".artifacts"
+      # GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
+      # IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
+      # COSIGN_EXPERIMENTAL: 1
+      # AWS_PROFILE: "${BC_AWS_PROFILE_PROD}"
+      # AWS_BUCKET: "${BC_AWS_SECURITY_SCANS_STORAGE_BUCKET_PROD}"
+      PRODUCT: "${{ github.event.repository.name }}"
+      ENGAGEMENT: "${{ github.event.repository.name }}_pipeline_${{ github.repository}}/${{ github.workflow }}_${{ github.ref }}"
+    steps:
+      - uses: actions/checkout@v4.1.0
+      - name: Test S3 Upload
+        run: |
+          export PRODUCT_TYPE=$(basename ${{ github.repository_owner }})
+          export EXPORT_DATE=$(date -u +"%Y%m%d")
+          export S3_KEY=${EXPORT_DATE}/${PRODUCT_TYPE}/${{ env.PRODUCT }}/${{ env.ENGAGEMENT }}
+          echo "Omnibus Smoke Test - Ignore" > file-1.txt
+          ls -la
+          s3upload -f file-1.txt -b ${AWS_BUCKET} -k ${S3_KEY}
+
+  oras:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      # TEMPLATE_VERSION: main
+      # FETCH_SAST_ARTIFACTS: "false"
+      # APP_IMAGE_TAG: "${{ github.sha }}"
+      # APP_IMAGE_SRC: "${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}"
+      # APP_IMAGE: "${APP_IMAGE_SRC}:${APP_IMAGE_TAG}"
+      # ARTIFACT_FOLDER: ".artifacts"
+      # GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
+      # IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
+      # COSIGN_EXPERIMENTAL: 1
+      ARTIFACT_TYPE: application/vnd.cms.batcave.smoke-test+text
+      SMOKE_TEST_IMAGE: "${{ vars.BC_IMAGE_REPO }}/devops-pipelines/cache/omnibus/smoke-test:latest"
+    steps:
+      - uses: actions/checkout@v4.1.0
+      - name: Test Oras
+        run: |
+          date > omnibus-smoke-test.txt
+          cat omnibus-smoke-test.txt
+          oras push -v --artifact-type ${{ env.ARTIFACT_TYPE }} ${{ env.SMOKE_TEST_IMAGE }} omnibus-smoke-test.txt
+          rm omnibus-smoke-test.txt
+          ls -lah
+          oras pull -v ${{ env.SMOKE_TEST_IMAGE }}
+          cat omnibus-smoke-test.txt
+
+  workflow-engine:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      # TEMPLATE_VERSION: main
+      # FETCH_SAST_ARTIFACTS: "false"
+      # APP_IMAGE_TAG: "${{ github.sha }}"
+      # APP_IMAGE_SRC: "${BC_IMAGE_REPO}/${{ github.repository }}"
+      # APP_IMAGE: "${APP_IMAGE_SRC}:${APP_IMAGE_TAG}"
+      # ARTIFACT_FOLDER: ".artifacts"
+      # GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
+      # IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
+      # COSIGN_EXPERIMENTAL: 1
+      WFE_BUILD_DIR: "."
+      WFE_BUILD_DOCKERFILE: Dockerfile
+      WFE_BUILD_TAG: latest
+      WFE_BUILD_PLATFORM: linux/amd64
+      WFE_BUILD_TARGET: build
+      WFE_BUILD_CACHE_TO: ""
+      WFE_BUILD_CACHE_FROM: ""
+      WFE_BUILD_SQUASH_LAYERS: "false"
+      WFE_SCAN_IMAGE_TARGET: ""
+      WFE_ARTIFACT_DIRECTORY: ".artifacts"
+      WFE_SBOM_FILENAME: sbom.json
+      WFE_GRYPE_FILENAME: grype.json
+    steps:
+      - uses: actions/checkout@v4.1.0
+      - name: Test Workflow Engine
+        run: |
+          echo "Workflow Engine Smoke Test"
+          workflow-engine run debug
+
+  semgrep:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      ARTIFACT_FOLDER: ".artifacts"
+    steps:
+      - name: Test Semgrep
+        run: |
+          mkdir -p ${{ env.ARTIFACT_FOLDER }}/sast/
+          osemgrep --help
+          osemgrep --experimental ci --json > ${{ env.ARTIFACT_FOLDER }}/sast/semgrep-sast-report.json || true
+          cat ${{ env.ARTIFACT_FOLDER }}/sast/semgrep-sast-report.json
+
+  release-tool:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    steps:
+      - name: Release Omnibus
+        run: |
+          release-cli help
 
   # _with-omnibus:
   #   runs-on: ubuntu-latest
