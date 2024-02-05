@@ -339,12 +339,14 @@ jobs:
       - name: Test S3 Upload
         run: |
           echo "github.repository_owner=${{ github.repository_owner }}"
-          export PRODUCT_TYPE=$(basename ${{ github.repository_owner }})
+          echo "PRODUCT=${{ env.PRODUCT}}"
+          echo "ENGAGEMENT=${{ env.ENGAGEMENT}}"
+          # export PRODUCT_TYPE=$(basename ${{ github.repository_owner }})
           export EXPORT_DATE=$(date -u +"%Y%m%d")
-          export S3_KEY=${EXPORT_DATE}/${PRODUCT_TYPE}/${{ env.PRODUCT }}/${{ env.ENGAGEMENT }}
+          export S3_KEY=${EXPORT_DATE}/${{ env.PRODUCT }}/${{ env.ENGAGEMENT }}
           echo "Omnibus Smoke Test - Ignore" > file-1.txt
 
-          echo "PRODUCT_TYPE=${PRODUCT_TYPE}"
+          # echo "PRODUCT_TYPE=${PRODUCT_TYPE}"
           echo "EXPORT_DATE=${EXPORT_DATE}"
           echo "S3_KEY=${S3_KEY}"
           echo "AWS_BUCKET=${{ env.AWS_BUCKET }}"
