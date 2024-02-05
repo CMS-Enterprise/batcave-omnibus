@@ -333,12 +333,15 @@ jobs:
       AWS_PROFILE: "${{ secrets.BC_AWS_PROFILE_PROD }}"
       AWS_BUCKET: "${{ secrets.BC_AWS_SECURITY_SCANS_STORAGE_BUCKET_PROD }}"
       PRODUCT: "${{ github.event.repository.name }}"
-      ENGAGEMENT: "${{ github.event.repository.name }}_pipeline_${{ github.repository}}/${{ github.workflow }}_${{ github.ref }}"
+      # ENGAGEMENT: "${{ github.event.repository.name }}_pipeline_${{ github.repository}}/${{ github.workflow }}_${{ github.ref }}"
+      ENGAGEMENT: "${{ github.event.repository.name }}_pipeline_${{ github.repository}}"
     steps:
       - uses: actions/checkout@v4.1.0
       - name: Test S3 Upload
         run: |
           echo "github.repository_owner=${{ github.repository_owner }}"
+          echo "github.workflow=${{ github.workflow }}"
+          echo "github.ref=${{ github.ref }}"
           echo "PRODUCT=${{ env.PRODUCT}}"
           echo "ENGAGEMENT=${{ env.ENGAGEMENT}}"
           # export PRODUCT_TYPE=$(basename ${{ github.repository_owner }})
