@@ -179,8 +179,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ${{ needs.delivery.outputs.IMAGE_NAME }}
-    # TODO: Fix syntax on the following
-    # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
     env:
       IMAGE_NAME: ${{ needs.delivery.outputs.IMAGE_NAME }}
       # BC_IMAGE_REPO: ghcr.io/batcave-docker
@@ -212,7 +210,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ${{ needs.delivery.outputs.IMAGE_NAME }}
-    # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
     env:
       IMAGE_NAME: ${{ needs.delivery.outputs.IMAGE_NAME }}
       IMAGE_SBOM: ".artifacts/sbom/sbom.json"
@@ -266,6 +263,30 @@ jobs:
       - run: touch ${GITLEAKS_REPORT}
       - run: echo "Starting Gitleaks Secrets Scan"
       - run: gitleaks detect --exit-code 0 --verbose --source juice-shop --report-format json --report-path ${GITLEAKS_REPORT}
+
+  cosign-crane:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      # TEMPLATE_VERSION: main
+      # FETCH_SAST_ARTIFACTS: "false"
+      APP_IMAGE_TAG: ${{ github.sha }}
+      APP_IMAGE_SRC: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}
+      APP_IMAGE: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
+      # ARTIFACT_FOLDER: ".artifacts"
+      # GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
+      # IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
+      # COSIGN_EXPERIMENTAL: 1
+    steps:
+      - uses: actions/checkout@v4.1.0
+      - run: cosign version
+      - run: crane version
+      - run: export TARGET_IMAGE=$(crane digest --full-ref ${APP_IMAGE})
+      - run: echo "Application Image Digest -> ${TARGET_IMAGE}"
+      - run: echo "Signing image using cosign with OIDC token"
+      - run: cosign sign --identity-token=$(cat /var/run/secrets/eks.amazonaws.com/serviceaccount/token) ${TARGET_IMAGE}
 
   # _with-omnibus:
   #   runs-on: ubuntu-latest
