@@ -356,7 +356,8 @@ jobs:
           echo "AWS_BUCKET=${{ env.AWS_BUCKET }}"
 
           ls -la
-          s3upload -f file-1.txt -b ${{ env.AWS_BUCKET }} -k ${S3_KEY}
+        # TODO: Need to add AWS credential to get this working
+        # s3upload -f file-1.txt -b ${{ env.AWS_BUCKET }} -k ${S3_KEY}
 
   oras:
     needs: [delivery]
