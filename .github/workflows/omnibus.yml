@@ -331,6 +331,7 @@ jobs:
       # IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
       # COSIGN_EXPERIMENTAL: 1
       AWS_PROFILE: "${{ secrets.BC_AWS_PROFILE_PROD }}"
+      AWS_REGION: "us-east-1"
       AWS_BUCKET: "${{ secrets.BC_AWS_SECURITY_SCANS_STORAGE_BUCKET_PROD }}"
       PRODUCT: "${{ github.event.repository.name }}"
       # ENGAGEMENT: "${{ github.event.repository.name }}_pipeline_${{ github.repository}}/${{ github.workflow }}_${{ github.ref }}"
