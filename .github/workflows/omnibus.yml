@@ -427,7 +427,6 @@ jobs:
       - gatecheck
       - s3upload
       - oras
-      - workflow-engine
       - semgrep
       - release-tool
     runs-on: ubuntu-latest
