@@ -62,6 +62,9 @@ RUN git clone --branch ${WFE_VERSION} --depth=1 --single-branch https://github.c
 RUN cd batcave-workflow-engine && \
     go build -ldflags="-s -w" -o /usr/local/bin/workflow-engine ./cmd/workflow-engine
 
+# Build Docker
+RUN curl -fsSL https://get.docker.com | sh
+
 # FROM artifactory.cloud.cms.gov/docker/rust:alpine3.19 as build-just
 FROM rust:alpine3.19 as build-just
 
@@ -181,5 +184,3 @@ COPY --from=build /usr/local/bin/gatecheck /usr/local/bin/gatecheck
 COPY --from=build /usr/local/bin/s3upload /usr/local/bin/s3upload
 COPY --from=build /usr/local/bin/oras /usr/local/bin/oras
 COPY --from=build /usr/local/bin/workflow-engine /usr/local/bin/workflow-engine
-
-RUN curl -fsSL https://get.docker.com | sh
