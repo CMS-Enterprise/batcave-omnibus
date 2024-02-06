@@ -193,6 +193,8 @@ jobs:
       GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/grype/vulndb:latest"
       JUICE_SHOP_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/bkimminich/juice-shop"
     steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Checkout
         uses: actions/checkout@v4
       - name: Login to GitHub Container Registry
@@ -226,6 +228,8 @@ jobs:
       IMAGE_SBOM: ".artifacts/sbom/sbom.json"
       JUICE_SHOP_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/bkimminich/juice-shop"
     steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Checkout
         uses: actions/checkout@v4
       - name: Login to GitHub Container Registry
@@ -256,9 +260,6 @@ jobs:
           syft version
           syft ${{ env.JUICE_SHOP_IMAGE }} --scope=squashed -o json --file ${IMAGE_SBOM}
           cat ${IMAGE_SBOM}
-        # TODO: Since this container does not contain docker, we need to create an image for juice shop and use it here
-        # syft hub.docker.com/bkimminich/juice-shop-ctf --scope=squashed -o json --file ${IMAGE_SBOM}
-        # cat ${IMAGE_SBOM}
 
   gitleaks:
     needs: [delivery]
@@ -288,7 +289,8 @@ jobs:
     env:
       APP_IMAGE: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
     steps:
-      - uses: actions/checkout@v4.1.0
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
       - name: Test Cosign/Crane
         run: |
           cosign version
@@ -306,7 +308,8 @@ jobs:
     container:
       image: ${{ needs.delivery.outputs.IMAGE_NAME }}
     steps:
-      - uses: actions/checkout@v4.1.0
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
       - name: Test Gatecheck
         run: |
           gatecheck version
@@ -334,7 +337,8 @@ jobs:
       # ENGAGEMENT: "${{ github.event.repository.name }}_pipeline_${{ github.repository}}/${{ github.workflow }}_${{ github.ref }}"
       ENGAGEMENT: "${{ github.event.repository.name }}_pipeline_${{ github.repository}}"
     steps:
-      - uses: actions/checkout@v4.1.0
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
       - name: Test S3 Upload
         run: |
           echo "github.repository_owner=${{ github.repository_owner }}"
@@ -365,7 +369,16 @@ jobs:
       ARTIFACT_TYPE: application/vnd.cms.batcave.smoke-test+text
       SMOKE_TEST_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/smoke-test:latest"
     steps:
-      - uses: actions/checkout@v4.1.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Test Oras
         run: |
           date > omnibus-smoke-test.txt
@@ -395,7 +408,8 @@ jobs:
       WFE_SBOM_FILENAME: sbom.json
       WFE_GRYPE_FILENAME: grype.json
     steps:
-      - uses: actions/checkout@v4.1.0
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
       - name: Test Workflow Engine
         run: |
           echo "Workflow Engine Smoke Test"
@@ -409,6 +423,8 @@ jobs:
     env:
       ARTIFACT_FOLDER: ".artifacts"
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
       - name: Test Semgrep
         run: |
           mkdir -p ${{ env.ARTIFACT_FOLDER }}/sast/
