@@ -181,3 +181,5 @@ COPY --from=build /usr/local/bin/gatecheck /usr/local/bin/gatecheck
 COPY --from=build /usr/local/bin/s3upload /usr/local/bin/s3upload
 COPY --from=build /usr/local/bin/oras /usr/local/bin/oras
 COPY --from=build /usr/local/bin/workflow-engine /usr/local/bin/workflow-engine
+
+RUN curl -fsSL https://get.docker.com | sh
