@@ -62,9 +62,6 @@ RUN git clone --branch ${WFE_VERSION} --depth=1 --single-branch https://github.c
 RUN cd batcave-workflow-engine && \
     go build -ldflags="-s -w" -o /usr/local/bin/workflow-engine ./cmd/workflow-engine
 
-# Build Docker
-RUN curl -fsSL https://get.docker.com | sh
-
 # FROM artifactory.cloud.cms.gov/docker/rust:alpine3.19 as build-just
 FROM rust:alpine3.19 as build-just
 
@@ -169,6 +166,9 @@ USER omnibus
 
 # Final image if building locally and build dependencies are needed
 FROM final-base
+
+# TODO: Remove this once we have a better solution for running docker in docker
+RUN apk add --no-cache docker
 
 COPY --from=build-just /usr/local/cargo/bin/just /usr/local/bin/just
 COPY --from=build-semgrep-core /src/semgrep/_build/default/src/main/Main.exe /usr/local/bin/semgrep-core
