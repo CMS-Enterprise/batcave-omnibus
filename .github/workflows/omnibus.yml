@@ -10,8 +10,6 @@ on:
   pull_request:
     branches:
       - main
-env:
-  BC_IMAGE_REPO: ghcr.io/cms-enterprise
 
 jobs:
   delivery:
@@ -192,30 +190,24 @@ jobs:
       # COSIGN_EXPERIMENTAL: 1
       # GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/devops-pipelines/cache/grype/vulndb:latest"
 
-      # TODO: Update to get repo name from github.repository
-      GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/batcave-omnibus/grype/vulndb:latest"
-      GRYPE_JUICE_SHOP_IMAGE: "${{ vars.BC_IMAGE_REPO }}/batcave-omnibus/bkimminich/juice-shop"
+      GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/grype/vulndb:latest"
+      JUICE_SHOP_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/bkimminich/juice-shop"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Test Grype
         run: |
           echo "github.reposistory=${{ github.repository }}"
-          echo "github.reposistory.name=${{ github.repository.name }}"
+          echo "github.event.reposistory.name=${{ github.event.repository.name }}"
           echo "IMAGE_NAME=${{ env.IMAGE_NAME }}"
           echo "GRYPE_CACHE_IMAGE=${{ env.GRYPE_CACHE_IMAGE }}"
+          echo "JUICE_SHOP_IMAGE=${{ env.JUICE_SHOP_IMAGE }}"
           grype version
           oras pull ${{ env.GRYPE_CACHE_IMAGE }}
           grype db import vulndb.tar.gz
           grype db check
-          grype ${{ env.GRYPE_JUICE_SHOP_IMAGE }} -o json --file report.json
+          grype ${{ env.JUICE_SHOP_IMAGE }} -o json --file report.json
           cat report.json | jq .
-      # TODO: Add these steps when there is access to artifactory
-      # - run: oras pull ${GRYPE_CACHE_IMAGE}
-      # - run: grype db import vulndb.tar.gz
-      # - run: grype db check
-      # - run: grype artifactory.cloud.cms.gov/docker/bkimminich/juice-shop -o json --file report.json
-      # - run: cat report.json | jq .
 
   syft:
     needs: [delivery]
@@ -225,6 +217,7 @@ jobs:
     env:
       IMAGE_NAME: ${{ needs.delivery.outputs.IMAGE_NAME }}
       IMAGE_SBOM: ".artifacts/sbom/sbom.json"
+      JUICE_SHOP_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/bkimminich/juice-shop"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -254,9 +247,11 @@ jobs:
       - name: Test Syft
         run: |
           syft version
-      # TODO: Since this container does not contain docker, we need to create an image for juice shop and use it here
-      # syft hub.docker.com/bkimminich/juice-shop-ctf --scope=squashed -o json --file ${IMAGE_SBOM}
-      # cat ${IMAGE_SBOM}
+          syft ${{ env.JUICE_SHOP_IMAGE }} --scope=squashed -o json --file ${IMAGE_SBOM}
+          cat ${IMAGE_SBOM}
+        # TODO: Since this container does not contain docker, we need to create an image for juice shop and use it here
+        # syft hub.docker.com/bkimminich/juice-shop-ctf --scope=squashed -o json --file ${IMAGE_SBOM}
+        # cat ${IMAGE_SBOM}
 
   gitleaks:
     needs: [delivery]
@@ -274,9 +269,9 @@ jobs:
           git config --global --add safe.directory '*'
           git clone https://github.com/juice-shop/juice-shop.git
           mkdir -p ${{ env.ARTIFACT_FOLDER }}/gitleaks
-          touch ${GITLEAKS_REPORT}
+          touch ${{ env.GITLEAKS_REPORT }}
           echo "Starting Gitleaks Secrets Scan"
-          gitleaks detect --exit-code 0 --verbose --source juice-shop --report-format json --report-path ${GITLEAKS_REPORT}
+          gitleaks detect --exit-code 0 --verbose --source juice-shop --report-format json --report-path ${{ env.GITLEAKS_REPORT }}
 
   cosign-crane:
     needs: [delivery]
@@ -284,25 +279,18 @@ jobs:
     container:
       image: ${{ needs.delivery.outputs.IMAGE_NAME }}
     env:
-      # TEMPLATE_VERSION: main
-      # FETCH_SAST_ARTIFACTS: "false"
-      APP_IMAGE_TAG: ${{ github.sha }}
-      APP_IMAGE_SRC: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}
       APP_IMAGE: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
-      # ARTIFACT_FOLDER: ".artifacts"
-      # GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
-      # IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
-      # COSIGN_EXPERIMENTAL: 1
     steps:
       - uses: actions/checkout@v4.1.0
       - name: Test Cosign/Crane
         run: |
           cosign version
           crane version
-          export TARGET_IMAGE=$(crane digest --full-ref ${APP_IMAGE})
+          export TARGET_IMAGE=$(crane digest --full-ref ${{ env.APP_IMAGE }})
+          echo "TARGET_IMAGE=${TARGET_IMAGE}"
           echo "Application Image Digest -> ${TARGET_IMAGE}"
           echo "Signing image using cosign with OIDC token"
-        # TODO: Add the following when I figure out where this token comes from
+        # TODO: Add the following when a service account token is mounted to the pod
         # cosign sign --identity-token=$(cat /var/run/secrets/eks.amazonaws.com/serviceaccount/token) ${TARGET_IMAGE}
 
   gatecheck:
@@ -310,16 +298,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ${{ needs.delivery.outputs.IMAGE_NAME }}
-    # env:
-    #   TEMPLATE_VERSION: main
-    #   FETCH_SAST_ARTIFACTS: 'false'
-    #   APP_IMAGE_TAG: "${{ github.sha }}"
-    #   APP_IMAGE_SRC: "${BC_IMAGE_REPO}/${{ github.repository }}"
-    #   APP_IMAGE: "${APP_IMAGE_SRC}:${APP_IMAGE_TAG}"
-    #   ARTIFACT_FOLDER: ".artifacts"
-    #   GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
-    #   IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
-    #   COSIGN_EXPERIMENTAL: 1
     steps:
       - uses: actions/checkout@v4.1.0
       - name: Test Gatecheck
