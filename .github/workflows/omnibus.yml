@@ -10,6 +10,8 @@ on:
   pull_request:
     branches:
       - main
+env:
+  BC_IMAGE_REPO: ghcr.io/cms-enterprise
 
 jobs:
   delivery:
@@ -181,7 +183,6 @@ jobs:
       image: ${{ needs.delivery.outputs.IMAGE_NAME }}
     env:
       IMAGE_NAME: ${{ needs.delivery.outputs.IMAGE_NAME }}
-      # BC_IMAGE_REPO: ghcr.io/batcave-docker
       # APP_IMAGE_TAG: ${{ github.sha }}
       # APP_IMAGE_SRC: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}
       # APP_IMAGE: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
@@ -189,15 +190,19 @@ jobs:
       # GITLEAKS_REPORT: ".artifacts/gitleaks/gitleaks_report.json"
       # IMAGE_SBOM: ".artifacts/sbom/sbom.json"
       # COSIGN_EXPERIMENTAL: 1
-      GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/devops-pipelines/cache/grype/vulndb:latest"
+      # GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/devops-pipelines/cache/grype/vulndb:latest"
+      GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.repository.name }}/grype/vulndb:latest"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Test Grype
         run: |
+          echo "github.reposistory=${{ github.repository }}"
+          echo "github.reposistory.name=${{ github.repository.name }}"
           echo "IMAGE_NAME=${{ env.IMAGE_NAME }}"
           echo "GRYPE_CACHE_IMAGE=${{ env.GRYPE_CACHE_IMAGE }}"
           grype version
+          oras pull ${{ env.GRYPE_CACHE_IMAGE }}
       # TODO: Add these steps when there is access to artifactory
       # - run: oras pull ${GRYPE_CACHE_IMAGE}
       # - run: grype db import vulndb.tar.gz
@@ -242,7 +247,7 @@ jobs:
       - name: Test Syft
         run: |
           syft version
-      # Since this container does not contain docker, we need to create an image for juice shop and use it here
+      # TODO: Since this container does not contain docker, we need to create an image for juice shop and use it here
       # syft hub.docker.com/bkimminich/juice-shop-ctf --scope=squashed -o json --file ${IMAGE_SBOM}
       # cat ${IMAGE_SBOM}
 
