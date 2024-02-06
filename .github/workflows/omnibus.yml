@@ -193,8 +193,8 @@ jobs:
       GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/grype/vulndb:latest"
       JUICE_SHOP_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/bkimminich/juice-shop"
     steps:
-      # - name: Set up Docker Buildx
-      #   uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Checkout
         uses: actions/checkout@v4
       - name: Login to GitHub Container Registry

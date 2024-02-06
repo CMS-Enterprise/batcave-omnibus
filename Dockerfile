@@ -150,6 +150,9 @@ LABEL io.artifacthub.package.license="Apache-2.0"
 # Final image in a CI environment, assumes binaries are located in ./bin
 FROM final-base as final-ci
 
+# TODO: Remove this once we have a better solution for running docker in docker
+RUN apk add --no-cache docker
+
 COPY ./bin/grype /usr/local/bin/grype
 COPY ./bin/syft /usr/local/bin/syft
 COPY ./bin/gitleaks /usr/local/bin/gitleaks
