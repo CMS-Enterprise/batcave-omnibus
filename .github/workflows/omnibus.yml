@@ -242,7 +242,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       # - name: Login to Docker Hub
       #   uses: docker/login-action@v3
       #   with:
@@ -383,6 +382,7 @@ jobs:
           rm omnibus-smoke-test.txt
           ls -lah
           oras pull -v ${{ env.SMOKE_TEST_IMAGE }}
+          echo "Smoke Test Contents:"
           cat omnibus-smoke-test.txt
 
   workflow-engine:
