@@ -212,10 +212,14 @@ jobs:
           echo "GRYPE_CACHE_IMAGE=${{ env.GRYPE_CACHE_IMAGE }}"
           echo "JUICE_SHOP_IMAGE=${{ env.JUICE_SHOP_IMAGE }}"
           grype version
+          echo "Doing Oras Pull..."
           oras pull ${{ env.GRYPE_CACHE_IMAGE }}
+          echo "Completed Oras Pull..."
           grype db import vulndb.tar.gz
           grype db check
+          echo "Doing Grype Scan..."
           grype ${{ env.JUICE_SHOP_IMAGE }} -o json --file report.json
+          echo "Completed Grype Scan..."
           cat report.json | jq .
 
   syft:
