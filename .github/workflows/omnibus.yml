@@ -303,8 +303,7 @@ jobs:
           echo "TARGET_IMAGE=${TARGET_IMAGE}"
           echo "Application Image Digest -> ${TARGET_IMAGE}"
           echo "Signing image using cosign with OIDC token"
-        # TODO: Add the following when a service account token is mounted to the pod
-        # cosign sign --identity-token=$(cat /var/run/secrets/eks.amazonaws.com/serviceaccount/token) ${TARGET_IMAGE}
+          cosign sign --identity-token=$(cat /var/run/secrets/eks.amazonaws.com/serviceaccount/token) ${TARGET_IMAGE}
 
   gatecheck:
     needs: [delivery]
@@ -352,8 +351,7 @@ jobs:
           echo "AWS_BUCKET=${{ env.AWS_BUCKET }}"
 
           ls -la
-        # TODO: Need to add AWS credential to get this working
-        # s3upload -f file-1.txt -b ${{ env.AWS_BUCKET }} -k ${S3_KEY}
+          s3upload -f file-1.txt -b ${{ env.AWS_BUCKET }} -k ${S3_KEY}
 
   oras:
     needs: [delivery]
