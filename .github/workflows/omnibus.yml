@@ -191,7 +191,10 @@ jobs:
       # IMAGE_SBOM: ".artifacts/sbom/sbom.json"
       # COSIGN_EXPERIMENTAL: 1
       # GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/devops-pipelines/cache/grype/vulndb:latest"
-      GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.repository.name }}/grype/vulndb:latest"
+
+      # TODO: Update to get repo name from github.repository
+      GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/batcave-omnibus/grype/vulndb:latest"
+      GRYPE_JUICE_SHOP_IMAGE: "${{ vars.BC_IMAGE_REPO }}/batcave-omnibus/bkimminich/juice-shop"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -203,6 +206,10 @@ jobs:
           echo "GRYPE_CACHE_IMAGE=${{ env.GRYPE_CACHE_IMAGE }}"
           grype version
           oras pull ${{ env.GRYPE_CACHE_IMAGE }}
+          grype db import vulndb.tar.gz
+          grype db check
+          grype ${{ env.GRYPE_JUICE_SHOP_IMAGE }} -o json --file report.json
+          cat report.json | jq .
       # TODO: Add these steps when there is access to artifactory
       # - run: oras pull ${GRYPE_CACHE_IMAGE}
       # - run: grype db import vulndb.tar.gz
