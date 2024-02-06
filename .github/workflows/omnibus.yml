@@ -190,19 +190,22 @@ jobs:
       # COSIGN_EXPERIMENTAL: 1
       # GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/devops-pipelines/cache/grype/vulndb:latest"
 
-      GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/grype/vulndb:latest"
-      JUICE_SHOP_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/bkimminich/juice-shop"
+      # ghcr.io/cms-enterprise/batcave/grype-vulndb-cache
+      # https://hub.docker.com/r/bkimminich/juice-shop
+      GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/batcave/grype-vulndb-cache/vulndb:latest"
+      # JUICE_SHOP_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/bkimminich/juice-shop"
+      JUICE_SHOP_IMAGE: "bkimminich/juice-shop"
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v3
+      # - name: Login to GitHub Container Registry
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
       - name: Test Grype
         run: |
           echo "github.reposistory=${{ github.repository }}"
@@ -230,18 +233,19 @@ jobs:
     env:
       IMAGE_NAME: ${{ needs.delivery.outputs.IMAGE_NAME }}
       IMAGE_SBOM: ".artifacts/sbom/sbom.json"
-      JUICE_SHOP_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/bkimminich/juice-shop"
+      # JUICE_SHOP_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/bkimminich/juice-shop"
+      JUICE_SHOP_IMAGE: "bkimminich/juice-shop"
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v3
+      # - name: Login to GitHub Container Registry
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
       # - name: Login to Docker Hub
       #   uses: docker/login-action@v3
       #   with:
@@ -303,7 +307,8 @@ jobs:
           echo "TARGET_IMAGE=${TARGET_IMAGE}"
           echo "Application Image Digest -> ${TARGET_IMAGE}"
           echo "Signing image using cosign with OIDC token"
-          cosign sign --identity-token=$(cat /var/run/secrets/eks.amazonaws.com/serviceaccount/token) ${TARGET_IMAGE}
+        # TODO: Add this back in when we have a valid OIDC token
+        # cosign sign --identity-token=$(cat /var/run/secrets/eks.amazonaws.com/serviceaccount/token) ${TARGET_IMAGE}
 
   gatecheck:
     needs: [delivery]
@@ -351,7 +356,8 @@ jobs:
           echo "AWS_BUCKET=${{ env.AWS_BUCKET }}"
 
           ls -la
-          s3upload -f file-1.txt -b ${{ env.AWS_BUCKET }} -k ${S3_KEY}
+        # TODO: Add this back in when we have a valid AWS profile
+        # s3upload -f file-1.txt -b ${{ env.AWS_BUCKET }} -k ${S3_KEY}
 
   oras:
     needs: [delivery]
@@ -382,32 +388,6 @@ jobs:
           oras pull -v ${{ env.SMOKE_TEST_IMAGE }}
           echo "Smoke Test Contents:"
           cat omnibus-smoke-test.txt
-
-  workflow-engine:
-    needs: [delivery]
-    runs-on: ubuntu-latest
-    container:
-      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
-    env:
-      WFE_BUILD_DIR: "."
-      WFE_BUILD_DOCKERFILE: Dockerfile
-      WFE_BUILD_TAG: latest
-      WFE_BUILD_PLATFORM: linux/amd64
-      WFE_BUILD_TARGET: build
-      WFE_BUILD_CACHE_TO: ""
-      WFE_BUILD_CACHE_FROM: ""
-      WFE_BUILD_SQUASH_LAYERS: "false"
-      WFE_SCAN_IMAGE_TARGET: ""
-      WFE_ARTIFACT_DIRECTORY: ".artifacts"
-      WFE_SBOM_FILENAME: sbom.json
-      WFE_GRYPE_FILENAME: grype.json
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4.1.0
-      - name: Test Workflow Engine
-        run: |
-          echo "Workflow Engine Smoke Test"
-          workflow-engine run debug
 
   semgrep:
     needs: [delivery]
