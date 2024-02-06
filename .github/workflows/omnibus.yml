@@ -193,16 +193,16 @@ jobs:
       GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/grype/vulndb:latest"
       JUICE_SHOP_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/bkimminich/juice-shop"
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v3
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Login to GitHub Container Registry
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
       - name: Test Grype
         run: |
           echo "github.reposistory=${{ github.repository }}"
@@ -228,16 +228,16 @@ jobs:
       IMAGE_SBOM: ".artifacts/sbom/sbom.json"
       JUICE_SHOP_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/bkimminich/juice-shop"
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v3
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Login to GitHub Container Registry
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
       # - name: Login to Docker Hub
       #   uses: docker/login-action@v3
       #   with:
@@ -321,15 +321,6 @@ jobs:
     container:
       image: ${{ needs.delivery.outputs.IMAGE_NAME }}
     env:
-      # TEMPLATE_VERSION: main
-      # FETCH_SAST_ARTIFACTS: "false"
-      # APP_IMAGE_TAG: "${{ github.sha }}"
-      # APP_IMAGE_SRC: "${BC_IMAGE_REPO}/${{ github.repository }}"
-      # APP_IMAGE: "${APP_IMAGE_SRC}:${APP_IMAGE_TAG}"
-      # ARTIFACT_FOLDER: ".artifacts"
-      # GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
-      # IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
-      # COSIGN_EXPERIMENTAL: 1
       AWS_PROFILE: "${{ secrets.BC_AWS_PROFILE_PROD }}"
       AWS_REGION: "us-east-1"
       AWS_BUCKET: "${{ secrets.BC_AWS_SECURITY_SCANS_STORAGE_BUCKET_PROD }}"
