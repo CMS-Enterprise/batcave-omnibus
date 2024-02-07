@@ -32,10 +32,13 @@ jobs:
 
       - name: Set up the environment
         run: |
+          echo "GITHUB_REF=${GITHUB_REF}"
           if [[ $GITHUB_REF == refs/heads/* ]]; then
             echo "IMAGE_NAME=${{ vars.BC_IMAGE_REPO }}/batcave/omnibus:testing" >> $GITHUB_ENV
-          else
+          elif [[ $GITHUB_REF == refs/tags/v* ]]; then
             echo "IMAGE_NAME=${{ vars.BC_IMAGE_REPO }}/batcave/omnibus:$GITHUB_REF_NAME" >> $GITHUB_ENV
+          else
+            echo "IMAGE_NAME=${{ vars.BC_IMAGE_REPO }}/batcave/omnibus:latest" >> $GITHUB_ENV
           fi
 
       # TODO combine all delivery jobs into a single action
