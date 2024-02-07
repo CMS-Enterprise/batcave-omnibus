@@ -263,6 +263,7 @@ jobs:
 
   release-github:
     needs:
+      - delivery
       - grype
       - syft
       - gitleaks
@@ -282,6 +283,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4.1.0
       - run: echo "Released ${{ env.IMAGE_NAME }} to GitHub registry..."
+      # TODO: Currently the release is done in the delivery job, but we could move it here to only release if all checks pass
       # - uses: softprops/action-gh-release@v0.1.15
       #   with:
       #     tag_name: "${{ github.ref }}"
