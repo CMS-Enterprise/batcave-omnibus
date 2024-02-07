@@ -264,6 +264,7 @@ jobs:
       - semgrep
       - release-tool
     runs-on: ubuntu-latest
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     container:
       image: ${{ needs.delivery.outputs.IMAGE_NAME }}
     env:
