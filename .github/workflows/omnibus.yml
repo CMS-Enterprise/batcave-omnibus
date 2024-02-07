@@ -193,7 +193,6 @@ jobs:
       # ghcr.io/cms-enterprise/batcave/grype-vulndb-cache
       # https://hub.docker.com/r/bkimminich/juice-shop
       GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/batcave/grype-vulndb-cache/vulndb:latest"
-      # JUICE_SHOP_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/bkimminich/juice-shop"
       JUICE_SHOP_IMAGE: "bkimminich/juice-shop"
     steps:
       - name: Checkout
@@ -231,7 +230,6 @@ jobs:
     env:
       IMAGE_NAME: ${{ needs.delivery.outputs.IMAGE_NAME }}
       IMAGE_SBOM: ".artifacts/sbom/sbom.json"
-      # JUICE_SHOP_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/bkimminich/juice-shop"
       JUICE_SHOP_IMAGE: "bkimminich/juice-shop"
     steps:
       - name: Checkout
@@ -247,18 +245,6 @@ jobs:
       #   with:
       #     username: ${{ secrets.BC_DOCKERHUB_USERNAME }}
       #     password: ${{ secrets.BC_DOCKERHUB_PASSWORD }}
-      # - name: Download artifact
-      #   uses: actions/download-artifact@v3
-      #   with:
-      #     name: myimage
-      #     path: /tmp
-      # - name: Load Docker image
-      #   # - run: mkdir ~/.docker && echo $BC_ARTIFACTORY_AUTH_JSON >> ~/.docker/config.json
-      #   run: |
-      #     docker load --input /tmp/myimage.tar
-      #     docker image ls -a
-      #     docker run --entrypoint=/bin/sh ${{ env.IMAGE_NAME }} -c 'syft version'
-      #     docker run --entrypoint=/bin/sh ${{ env.IMAGE_NAME }} -c 'syft hub.docker.com/bkimminich/juice-shop-ctf --scope=squashed -o json --file ${IMAGE_SBOM}; cat ${IMAGE_SBOM}'
       - name: Test Syft
         run: |
           syft version
@@ -329,7 +315,6 @@ jobs:
       AWS_REGION: "us-east-1"
       AWS_BUCKET: "${{ secrets.BC_AWS_SECURITY_SCANS_STORAGE_BUCKET_PROD }}"
       PRODUCT: "${{ github.event.repository.name }}"
-      # ENGAGEMENT: "${{ github.event.repository.name }}_pipeline_${{ github.repository}}/${{ github.workflow }}_${{ github.ref }}"
       ENGAGEMENT: "${{ github.event.repository.name }}_pipeline_${{ github.repository}}"
     steps:
       - name: Checkout
@@ -362,7 +347,7 @@ jobs:
       image: ${{ needs.delivery.outputs.IMAGE_NAME }}
     env:
       ARTIFACT_TYPE: application/vnd.cms.batcave.smoke-test+text
-      SMOKE_TEST_IMAGE: "${{ vars.BC_IMAGE_REPO }}/${{ github.event.repository.name }}/smoke-test:latest"
+      SMOKE_TEST_IMAGE: "${{ vars.BC_IMAGE_REPO }}/batcave/omnibus/smoke-test:latest"
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
