@@ -360,38 +360,38 @@ jobs:
       #     username: ${{ github.actor }}
       #     password: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Test Oras
-      #   run: |
-      #     date > omnibus-smoke-test.txt
-      #     cat omnibus-smoke-test.txt
-      #     echo "Doing oras push..."
-      #     oras push -v --artifact-type ${{ env.ARTIFACT_TYPE }} ${{ env.SMOKE_TEST_IMAGE }} omnibus-smoke-test.txt
-      #     rm omnibus-smoke-test.txt
-      #     ls -lah
-      #     echo "Doing oras pull..."
-      #     oras pull -v ${{ env.SMOKE_TEST_IMAGE }}
-      #     echo "Smoke Test Contents:"
-      #     cat omnibus-smoke-test.txt
-
-      - name: Test GH Upload/Download Artifacts
+      - name: Test Oras
         run: |
           date > omnibus-smoke-test.txt
           cat omnibus-smoke-test.txt
-      - uses: actions/upload-artifact@v4
-        with:
-          name: smoke-test
-          path: omnibus-smoke-test.txt
-      - name: Remove file
-        run: |
+          echo "Doing oras push..."
+          oras push -v --artifact-type ${{ env.ARTIFACT_TYPE }} ${{ env.SMOKE_TEST_IMAGE }} omnibus-smoke-test.txt
           rm omnibus-smoke-test.txt
-      - uses: actions/download-artifact@v4
-        with:
-          name: smoke-test
-      - name: Finish testing
-        run: |
           ls -lah
+          echo "Doing oras pull..."
+          oras pull -v ${{ env.SMOKE_TEST_IMAGE }}
           echo "Smoke Test Contents:"
           cat omnibus-smoke-test.txt
+
+      # - name: Test GH Upload/Download Artifacts
+      #   run: |
+      #     date > omnibus-smoke-test.txt
+      #     cat omnibus-smoke-test.txt
+      # - uses: actions/upload-artifact@v4
+      #   with:
+      #     name: smoke-test
+      #     path: omnibus-smoke-test.txt
+      # - name: Remove file
+      #   run: |
+      #     rm omnibus-smoke-test.txt
+      # - uses: actions/download-artifact@v4
+      #   with:
+      #     name: smoke-test
+      # - name: Finish testing
+      #   run: |
+      #     ls -lah
+      #     echo "Smoke Test Contents:"
+      #     cat omnibus-smoke-test.txt
 
   semgrep:
     needs: [delivery]
@@ -517,248 +517,3 @@ jobs:
   #       run: |
   #         mkdir ~/.docker && echo ${{ secrets.BC_ARTIFACTORY_AUTH_JSON }} >> ~/.docker/config.json
   #         run: echo 'BC_IMAGE_REPO: ${{ env.BC_IMAGE_REPO }}'
-
-  # grype:
-  #   needs: _with-current-image
-  #   runs-on: ubuntu-latest
-  #   # TODO: Fix syntax on the following
-  #   # if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
-  #   env:
-  #     GRYPE_CACHE_IMAGE: "${BC_IMAGE_REPO}/devops-pipelines/cache/grype/vulndb:latest"
-  #   steps:
-  #     - uses: actions/checkout@v4.1.0
-  #     - run: oras pull ${GRYPE_CACHE_IMAGE}
-  #     - run: grype db import vulndb.tar.gz
-  #     - run: grype db check
-  #     - run: grype artifactory.cloud.cms.gov/docker/bkimminich/juice-shop -o json --file report.json
-  #     - run: cat report.json | jq .
-
-  # syft:
-  #   needs: delivery-pipeline
-  #   runs-on: ubuntu-latest
-  #   container:
-  #     image: "${APP_IMAGE}"
-  #   if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
-  #   env:
-  #     TEMPLATE_VERSION: main
-  #     FETCH_SAST_ARTIFACTS: 'false'
-  #     APP_IMAGE_TAG: "${{ github.sha }}"
-  #     APP_IMAGE_SRC: "${BC_IMAGE_REPO}/${{ github.repository }}"
-  #     APP_IMAGE: "${APP_IMAGE_SRC}:${APP_IMAGE_TAG}"
-  #     ARTIFACT_FOLDER: ".artifacts"
-  #     GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
-  #     IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
-  #     COSIGN_EXPERIMENTAL: 1
-  #   steps:
-  #   - uses: actions/checkout@v4.1.0
-  #   - run: mkdir ~/.docker && echo $BC_ARTIFACTORY_AUTH_JSON >> ~/.docker/config.json
-  #   - run: syft version
-  #   - run: syft artifactory.cloud.cms.gov/docker/bkimminich/juice-shop --scope=squashed -o json --file ${IMAGE_SBOM}
-  #   - run: cat ${IMAGE_SBOM}
-  # gitleaks:
-  #   needs: delivery-pipeline
-  #   runs-on: ubuntu-latest
-  #   container:
-  #     image: "${APP_IMAGE}"
-  #   if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
-  #   env:
-  #     TEMPLATE_VERSION: main
-  #     FETCH_SAST_ARTIFACTS: 'false'
-  #     APP_IMAGE_TAG: "${{ github.sha }}"
-  #     APP_IMAGE_SRC: "${BC_IMAGE_REPO}/${{ github.repository }}"
-  #     APP_IMAGE: "${APP_IMAGE_SRC}:${APP_IMAGE_TAG}"
-  #     ARTIFACT_FOLDER: ".artifacts"
-  #     GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
-  #     IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
-  #     COSIGN_EXPERIMENTAL: 1
-  #   steps:
-  #   - uses: actions/checkout@v4.1.0
-  #   - run: mkdir ~/.docker && echo $BC_ARTIFACTORY_AUTH_JSON >> ~/.docker/config.json
-  #   - run: git config --global --add safe.directory '*'
-  #   - run: git clone https://github.com/juice-shop/juice-shop.git
-  #   - run: mkdir -p $ARTIFACT_FOLDER/gitleaks
-  #   - run: touch ${GITLEAKS_REPORT}
-  #   - run: echo "Starting Gitleaks Secrets Scan"
-  #   - run: gitleaks detect --exit-code 0 --verbose --source juice-shop --report-format json --report-path ${GITLEAKS_REPORT}
-  # cosign-crane:
-  #   needs: delivery-pipeline
-  #   runs-on: ubuntu-latest
-  #   container:
-  #     image: "${APP_IMAGE}"
-  #   if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
-  #   env:
-  #     TEMPLATE_VERSION: main
-  #     FETCH_SAST_ARTIFACTS: 'false'
-  #     APP_IMAGE_TAG: "${{ github.sha }}"
-  #     APP_IMAGE_SRC: "${BC_IMAGE_REPO}/${{ github.repository }}"
-  #     APP_IMAGE: "${APP_IMAGE_SRC}:${APP_IMAGE_TAG}"
-  #     ARTIFACT_FOLDER: ".artifacts"
-  #     GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
-  #     IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
-  #     COSIGN_EXPERIMENTAL: 1
-  #   steps:
-  #   - uses: actions/checkout@v4.1.0
-  #   - run: mkdir ~/.docker && echo $BC_ARTIFACTORY_AUTH_JSON >> ~/.docker/config.json
-  #   - run: cosign version
-  #   - run: crane version
-  #   - run: export TARGET_IMAGE=$(crane digest --full-ref ${APP_IMAGE})
-  #   - run: echo "Application Image Digest -> ${TARGET_IMAGE}"
-  #   - run: echo "Signing image using cosign with OIDC token"
-  #   - run: cosign sign --identity-token=$(cat /var/run/secrets/eks.amazonaws.com/serviceaccount/token) ${TARGET_IMAGE}
-  # gatecheck:
-  #   needs: delivery-pipeline
-  #   runs-on: ubuntu-latest
-  #   container:
-  #     image: "${APP_IMAGE}"
-  #   if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
-  #   env:
-  #     TEMPLATE_VERSION: main
-  #     FETCH_SAST_ARTIFACTS: 'false'
-  #     APP_IMAGE_TAG: "${{ github.sha }}"
-  #     APP_IMAGE_SRC: "${BC_IMAGE_REPO}/${{ github.repository }}"
-  #     APP_IMAGE: "${APP_IMAGE_SRC}:${APP_IMAGE_TAG}"
-  #     ARTIFACT_FOLDER: ".artifacts"
-  #     GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
-  #     IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
-  #     COSIGN_EXPERIMENTAL: 1
-  #   steps:
-  #   - uses: actions/checkout@v4.1.0
-  #   - run: mkdir ~/.docker && echo $BC_ARTIFACTORY_AUTH_JSON >> ~/.docker/config.json
-  #   - run: gatecheck version
-  #   - run: gatecheck config info
-  # s3upload:
-  #   needs: delivery-pipeline
-  #   runs-on: ubuntu-latest
-  #   container:
-  #     image: "${APP_IMAGE}"
-  #   if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
-  #   env:
-  #     TEMPLATE_VERSION: main
-  #     FETCH_SAST_ARTIFACTS: 'false'
-  #     APP_IMAGE_TAG: "${{ github.sha }}"
-  #     APP_IMAGE_SRC: "${BC_IMAGE_REPO}/${{ github.repository }}"
-  #     APP_IMAGE: "${APP_IMAGE_SRC}:${APP_IMAGE_TAG}"
-  #     ARTIFACT_FOLDER: ".artifacts"
-  #     GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
-  #     IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
-  #     COSIGN_EXPERIMENTAL: 1
-  #     AWS_PROFILE: "${BC_AWS_PROFILE_PROD}"
-  #     AWS_BUCKET: "${BC_AWS_SECURITY_SCANS_STORAGE_BUCKET_PROD}"
-  #     PRODUCT: "${{ github.event.repository.name }}"
-  #     ENGAGEMENT: "${{ github.event.repository.name }}_pipeline_${{ github.repository}}/${{ github.workflow }}_${{ github.ref }}"
-  #   steps:
-  #   - uses: actions/checkout@v4.1.0
-  #   - run: mkdir ~/.docker && echo $BC_ARTIFACTORY_AUTH_JSON >> ~/.docker/config.json
-  #   - run: export PRODUCT_TYPE=$(basename ${{ github.repository_owner }})
-  #   - run: export EXPORT_DATE=$(date -u +"%Y%m%d")
-  #   - run: export S3_KEY=${EXPORT_DATE}/${PRODUCT_TYPE}/${PRODUCT}/${ENGAGEMENT}
-  #   - run: echo "Omnibus Smoke Test - Ignore" > file-1.txt
-  #   - run: ls -la
-  #   - run: s3upload -f file-1.txt -b ${AWS_BUCKET} -k ${S3_KEY}
-  # oras:
-  #   needs: delivery-pipeline
-  #   runs-on: ubuntu-latest
-  #   container:
-  #     image: "${APP_IMAGE}"
-  #   if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
-  #   env:
-  #     TEMPLATE_VERSION: main
-  #     FETCH_SAST_ARTIFACTS: 'false'
-  #     APP_IMAGE_TAG: "${{ github.sha }}"
-  #     APP_IMAGE_SRC: "${BC_IMAGE_REPO}/${{ github.repository }}"
-  #     APP_IMAGE: "${APP_IMAGE_SRC}:${APP_IMAGE_TAG}"
-  #     ARTIFACT_FOLDER: ".artifacts"
-  #     GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
-  #     IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
-  #     COSIGN_EXPERIMENTAL: 1
-  #     ARTIFACT_TYPE: application/vnd.cms.batcave.smoke-test+text
-  #     SMOKE_TEST_IMAGE: "${BC_IMAGE_REPO}/devops-pipelines/cache/omnibus/smoke-test:latest"
-  #   steps:
-  #   - uses: actions/checkout@v4.1.0
-  #   - run: mkdir ~/.docker && echo $BC_ARTIFACTORY_AUTH_JSON >> ~/.docker/config.json
-  #   - run: date > omnibus-smoke-test.txt
-  #   - run: cat omnibus-smoke-test.txt
-  #   - run: oras push -v --artifact-type ${ARTIFACT_TYPE} ${SMOKE_TEST_IMAGE} omnibus-smoke-test.txt
-  #   - run: rm omnibus-smoke-test.txt
-  #   - run: ls -lah
-  #   - run: oras pull -v ${SMOKE_TEST_IMAGE}
-  #   - run: cat omnibus-smoke-test.txt
-  # workflow-engine:
-  #   needs: delivery-pipeline
-  #   runs-on: ubuntu-latest
-  #   container:
-  #     image: "${APP_IMAGE}"
-  #   if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
-  #   env:
-  #     TEMPLATE_VERSION: main
-  #     FETCH_SAST_ARTIFACTS: 'false'
-  #     APP_IMAGE_TAG: "${{ github.sha }}"
-  #     APP_IMAGE_SRC: "${BC_IMAGE_REPO}/${{ github.repository }}"
-  #     APP_IMAGE: "${APP_IMAGE_SRC}:${APP_IMAGE_TAG}"
-  #     ARTIFACT_FOLDER: ".artifacts"
-  #     GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
-  #     IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
-  #     COSIGN_EXPERIMENTAL: 1
-  #     WFE_BUILD_DIR: "."
-  #     WFE_BUILD_DOCKERFILE: Dockerfile
-  #     WFE_BUILD_TAG: latest
-  #     WFE_BUILD_PLATFORM: linux/amd64
-  #     WFE_BUILD_TARGET: build
-  #     WFE_BUILD_CACHE_TO: ''
-  #     WFE_BUILD_CACHE_FROM: ''
-  #     WFE_BUILD_SQUASH_LAYERS: 'false'
-  #     WFE_SCAN_IMAGE_TARGET: ''
-  #     WFE_ARTIFACT_DIRECTORY: ".artifacts"
-  #     WFE_SBOM_FILENAME: sbom.json
-  #     WFE_GRYPE_FILENAME: grype.json
-  #   steps:
-  #   - uses: actions/checkout@v4.1.0
-  #   - run: mkdir ~/.docker && echo $BC_ARTIFACTORY_AUTH_JSON >> ~/.docker/config.json
-  #   - run: echo "Workflow Engine Smoke Test"
-  #   - run: workflow-engine run debug
-  # release-tool:
-  #   needs: delivery-pipeline
-  #   runs-on: ubuntu-latest
-  #   container:
-  #     image: "${APP_IMAGE}"
-  #   if: !(${{ github.event_name }} == "merge_request_event") || always() || !(${{ github.ref }}) || always()
-  #   env:
-  #     TEMPLATE_VERSION: main
-  #     FETCH_SAST_ARTIFACTS: 'false'
-  #     APP_IMAGE_TAG: "${{ github.sha }}"
-  #     APP_IMAGE_SRC: "${BC_IMAGE_REPO}/${{ github.repository }}"
-  #     APP_IMAGE: "${APP_IMAGE_SRC}:${APP_IMAGE_TAG}"
-  #     ARTIFACT_FOLDER: ".artifacts"
-  #     GITLEAKS_REPORT: "${ARTIFACT_FOLDER}/gitleaks/gitleaks_report.json"
-  #     IMAGE_SBOM: "${ARTIFACT_FOLDER}/sbom/sbom.json"
-  #     COSIGN_EXPERIMENTAL: 1
-  #   steps:
-  #   - uses: actions/checkout@v4.1.0
-  #   - run: mkdir ~/.docker && echo $BC_ARTIFACTORY_AUTH_JSON >> ~/.docker/config.json
-  #   - run: release-cli help
-  # release-gitlab:
-  #   needs:
-  #   - grype
-  #   - syft
-  #   - gitleaks
-  #   - cosign-crane
-  #   - gatecheck
-  #   - s3upload
-  #   - oras
-  #   - workflow-engine
-  #   - release-tool
-  #   runs-on: ubuntu-latest
-  #   container:
-  #     image: artifactory.cloud.cms.gov/batcave-docker/devops-pipelines/pipeline-tools/omnibus:v1.0.0-rc.10
-  #   if: !(${{ github.event_name }} == "merge_request_event") || always() || ${{ github.ref }}
-  #   env:
-  #     TEMPLATE_VERSION: main
-  #     FETCH_SAST_ARTIFACTS: 'false'
-  #   steps:
-  #   - uses: actions/checkout@v4.1.0
-  #   - run: echo "Release to GitLab..."
-  #   - uses: softprops/action-gh-release@v0.1.15
-  #     with:
-  #       tag_name: "${{ github.ref }}"
-  #       name: Release ${{ github.ref }}
-  #       body: Omnibus Release ${{ github.ref }}
