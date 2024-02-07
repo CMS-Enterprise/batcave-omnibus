@@ -359,16 +359,37 @@ jobs:
       #     registry: ghcr.io
       #     username: ${{ github.actor }}
       #     password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Test Oras
+
+      # - name: Test Oras
+      #   run: |
+      #     date > omnibus-smoke-test.txt
+      #     cat omnibus-smoke-test.txt
+      #     echo "Doing oras push..."
+      #     oras push -v --artifact-type ${{ env.ARTIFACT_TYPE }} ${{ env.SMOKE_TEST_IMAGE }} omnibus-smoke-test.txt
+      #     rm omnibus-smoke-test.txt
+      #     ls -lah
+      #     echo "Doing oras pull..."
+      #     oras pull -v ${{ env.SMOKE_TEST_IMAGE }}
+      #     echo "Smoke Test Contents:"
+      #     cat omnibus-smoke-test.txt
+
+      - name: Test GH Upload/Download Artifacts
         run: |
           date > omnibus-smoke-test.txt
           cat omnibus-smoke-test.txt
-          echo "Doing oras push..."
-          oras push -v --artifact-type ${{ env.ARTIFACT_TYPE }} ${{ env.SMOKE_TEST_IMAGE }} omnibus-smoke-test.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test
+          path: omnibus-smoke-test.txt
+      - name: Remove file
+        run: |
           rm omnibus-smoke-test.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: smoke-test
+      - name: Finish testing
+        run: |
           ls -lah
-          echo "Doing oras pull..."
-          oras pull -v ${{ env.SMOKE_TEST_IMAGE }}
           echo "Smoke Test Contents:"
           cat omnibus-smoke-test.txt
 
