@@ -216,6 +216,9 @@ jobs:
           oras pull ${{ env.GRYPE_CACHE_IMAGE }}
           echo "Completed Oras Pull..."
           grype db import vulndb.tar.gz
+          echo "Doing DB Update..."
+          grype db update
+          echo "Doing DB Check..."
           grype db check
           echo "Doing Grype Scan..."
           grype ${{ env.JUICE_SHOP_IMAGE }} -o json --file report.json
