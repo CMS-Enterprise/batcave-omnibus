@@ -347,7 +347,7 @@ jobs:
       image: ${{ needs.delivery.outputs.IMAGE_NAME }}
     env:
       ARTIFACT_TYPE: application/vnd.cms.batcave.smoke-test+text
-      SMOKE_TEST_IMAGE: "${{ vars.BC_IMAGE_REPO }}/batcave/omnibus/smoke-test:latest"
+      SMOKE_TEST_IMAGE: "${{ vars.BC_IMAGE_REPO }}/batcave/omnibus-smoke-test:latest"
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.0
@@ -363,9 +363,11 @@ jobs:
         run: |
           date > omnibus-smoke-test.txt
           cat omnibus-smoke-test.txt
+          echo "Doing oras push..."
           oras push -v --artifact-type ${{ env.ARTIFACT_TYPE }} ${{ env.SMOKE_TEST_IMAGE }} omnibus-smoke-test.txt
           rm omnibus-smoke-test.txt
           ls -lah
+          echo "Doing oras pull..."
           oras pull -v ${{ env.SMOKE_TEST_IMAGE }}
           echo "Smoke Test Contents:"
           cat omnibus-smoke-test.txt
