@@ -150,6 +150,9 @@ LABEL io.artifacthub.package.license="Apache-2.0"
 # Final image in a CI environment, assumes binaries are located in ./bin
 FROM final-base as final-ci
 
+COPY ./bin/semgrep-core /usr/local/bin/semgrep-core
+RUN ln -s semgrep-core /usr/local/bin/osemgrep
+
 COPY ./bin/grype /usr/local/bin/grype
 COPY ./bin/syft /usr/local/bin/syft
 COPY ./bin/gitleaks /usr/local/bin/gitleaks
