@@ -192,7 +192,7 @@ jobs:
 
       # ghcr.io/cms-enterprise/batcave/grype-vulndb-cache
       # https://hub.docker.com/r/bkimminich/juice-shop
-      GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/batcave/grype-vulndb-cache/vulndb:latest"
+      GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/batcave/grype-vulndb-cache:latest"
       JUICE_SHOP_IMAGE: "bkimminich/juice-shop"
     steps:
       - name: Checkout
