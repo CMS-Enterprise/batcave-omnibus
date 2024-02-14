@@ -32,7 +32,7 @@ pipeline.
 - [GitLab Release CLI](https://gitlab.com/gitlab-org/release-cli/cmd/release-cli)
 - [Gatecheck](https://github.com/gatecheckdev/gatecheck)
 - [Go S3 Upload](https://github.com/bacchusjackson/go-s3-upload)
-- [Workflow Engine](https://github.com/CMS-Enterprise/batcave-workflow-engine)
+- [Semgrep](https://github.com/semgrep/semgrep)
 
 ## Rejected
 
@@ -67,3 +67,7 @@ POC: Bacchus Jackson (bjackson@clarityinnovates.com)
 
 Semgrep CLI uses a Python wrapper.
 This would require the python runtime, which violates rule 3.
+
+NOTE: Added 2 Feb 2024
+A docker build stage was added to build the OCaml version of semgrep.
+semgrep should now be run as osemgrep --experimental ...

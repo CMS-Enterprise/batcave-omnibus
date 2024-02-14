@@ -1,0 +1,277 @@
+name: Build Omnibus
+run-name: "Building Omnibus Image: ${{ github.event.head_commit.message }}"
+on:
+  push:
+    branches:
+      - main
+      - feat/*
+    tags:
+      - "*"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  delivery:
+    runs-on: ubuntu-latest
+    outputs:
+      IMAGE_NAME: ${{ steps.output.outputs.IMAGE_NAME }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # In order to support caching we need to make sure we are using the docker-container driver for builds
+      # - name: Restore image layer cache
+      #   uses: actions/cache/restore@v4
+      #   with:
+      #     path: ./container-cache-in
+      #     key: ${{ runner.os }}-
+      #     restore-keys: |
+      #       layers-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('Dockerfile') }}
+      #       layers-${{ runner.os }}-${{ github.ref }}
+      #       layers-${{ runner.os }}
+
+      - name: Set up the environment
+        run: |
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+            echo "IMAGE_NAME=${{ vars.BC_IMAGE_REPO }}/batcave/omnibus:$GITHUB_REF_NAME" >> $GITHUB_ENV
+          else
+            echo "IMAGE_NAME=${{ vars.BC_IMAGE_REPO }}/batcave/omnibus:latest" >> $GITHUB_ENV
+          fi
+
+      # TODO combine all delivery jobs into a single action
+      - name: Build container image
+        uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-build@feat/github-actions
+        with:
+          path: .
+          # TODO: the dockerfile path should be relative to the context path
+          dockerfile: ./Dockerfile
+          # TODO: add support for mixed case to workflow-engine (i.e. we should force container image tags to lowercase)
+          image_tag: ${{ env.IMAGE_NAME }}
+          # cache_from: ./container-cache-in
+          # cache_to: ./container-cache-out
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Save image layer cache
+      #   uses: actions/cache/save@v4
+      #   with:
+      #     path: ./container-cache-out
+      #     key: layers-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('Dockerfile') }}
+
+      - name: Scan container image
+        uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-scan@feat/github-actions
+        with:
+          image_tag: ${{ env.IMAGE_NAME }}
+          output_dir: ./artifacts
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # TODO: this should be something workflow-engine does as apart of the delivery pipeline
+      - name: Push image
+        # TODO: in the future push based on protected git tags, and move to release stage
+        # if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        shell: bash
+        run: docker push ${{ env.IMAGE_NAME }}
+
+      - name: Archive image scan outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-scan-results
+          path: ./artifacts/*.json
+          if-no-files-found: error
+
+      - id: output
+        run: |
+          echo "IMAGE_NAME=${{ env.IMAGE_NAME }}"
+          echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
+
+  grype:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      IMAGE_NAME: ${{ needs.delivery.outputs.IMAGE_NAME }}
+      GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/batcave/grype-vulndb-cache:latest"
+      JUICE_SHOP_IMAGE: "bkimminich/juice-shop"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Test Grype
+        run: |
+          grype version
+          oras pull ${{ env.GRYPE_CACHE_IMAGE }}
+          grype db import vulndb.tar.gz
+          grype db update
+          grype db check
+          grype ${{ env.JUICE_SHOP_IMAGE }} -o json --file report.json
+          cat report.json | jq .
+
+  syft:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      IMAGE_NAME: ${{ needs.delivery.outputs.IMAGE_NAME }}
+      IMAGE_SBOM: ".artifacts/sbom/sbom.json"
+      JUICE_SHOP_IMAGE: "bkimminich/juice-shop"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Test Syft
+        run: |
+          syft version
+          syft ${{ env.JUICE_SHOP_IMAGE }} --scope=squashed -o json --file ${IMAGE_SBOM}
+          cat ${IMAGE_SBOM}
+
+  gitleaks:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      ARTIFACT_FOLDER: ".artifacts"
+      GITLEAKS_REPORT: ".artifacts/gitleaks/gitleaks_report.json"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Test GitLeaks
+        run: |
+          git config --global --add safe.directory '*'
+          git clone https://github.com/juice-shop/juice-shop.git
+          mkdir -p ${{ env.ARTIFACT_FOLDER }}/gitleaks
+          touch ${{ env.GITLEAKS_REPORT }}
+          echo "Starting Gitleaks Secrets Scan"
+          gitleaks detect --exit-code 0 --verbose --source juice-shop --report-format json --report-path ${{ env.GITLEAKS_REPORT }}
+
+  cosign-crane:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      APP_IMAGE: ${{ vars.BC_IMAGE_REPO }}/${{ github.repository }}:${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
+      - name: Test Cosign/Crane
+        run: |
+          cosign version
+          crane version
+          export TARGET_IMAGE=$(crane digest --full-ref ${{ env.APP_IMAGE }})
+          echo "TARGET_IMAGE=${TARGET_IMAGE}"
+          echo "Application Image Digest -> ${TARGET_IMAGE}"
+          echo "Signing image using cosign with OIDC token"
+        # TODO: Add this back in when we have a valid OIDC token
+        # cosign sign --identity-token=$(cat /var/run/secrets/eks.amazonaws.com/serviceaccount/token) ${TARGET_IMAGE}
+
+  gatecheck:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
+      - name: Test Gatecheck
+        run: |
+          gatecheck version
+          gatecheck config info
+
+  s3upload:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      AWS_PROFILE: "${{ secrets.BC_AWS_PROFILE_PROD }}"
+      AWS_REGION: "us-east-1"
+      AWS_BUCKET: "${{ secrets.BC_AWS_SECURITY_SCANS_STORAGE_BUCKET_PROD }}"
+      PRODUCT: "${{ github.event.repository.name }}"
+      ENGAGEMENT: "${{ github.event.repository.name }}_pipeline_${{ github.repository}}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
+      - name: Test S3 Upload
+        run: |
+          export EXPORT_DATE=$(date -u +"%Y%m%d")
+          export S3_KEY=${EXPORT_DATE}/${{ env.PRODUCT }}/${{ env.ENGAGEMENT }}
+          echo "Omnibus Smoke Test - Ignore" > file-1.txt
+          ls -la
+        # TODO: Add this back in when we have a valid AWS profile
+        # s3upload -f file-1.txt -b ${{ env.AWS_BUCKET }} -k ${S3_KEY}
+
+  oras:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      ARTIFACT_TYPE: application/vnd.cms.batcave.smoke-test+text
+      SMOKE_TEST_IMAGE: "${{ vars.BC_IMAGE_REPO }}/batcave/omnibus-smoke-test:latest"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
+      - name: Test Oras
+        run: |
+          date > omnibus-smoke-test.txt
+          cat omnibus-smoke-test.txt
+          oras login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+          oras push -v --artifact-type ${{ env.ARTIFACT_TYPE }} ${{ env.SMOKE_TEST_IMAGE }} omnibus-smoke-test.txt
+          rm omnibus-smoke-test.txt
+          ls -lah
+          oras pull -v ${{ env.SMOKE_TEST_IMAGE }}
+          cat omnibus-smoke-test.txt
+
+  semgrep:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      ARTIFACT_FOLDER: ".artifacts"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
+      - name: Test Semgrep
+        run: |
+          mkdir -p ${{ env.ARTIFACT_FOLDER }}/sast/
+          osemgrep --help
+          osemgrep --experimental ci --json > ${{ env.ARTIFACT_FOLDER }}/sast/semgrep-sast-report.json || true
+          cat ${{ env.ARTIFACT_FOLDER }}/sast/semgrep-sast-report.json
+
+  release-tool:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    steps:
+      - name: Release Omnibus
+        run: |
+          echo "Releasing Omnibus..."
+        # TODO: Figure out equivalent release tool for GitHub Actions
+        # gh help
+
+  release-github:
+    needs:
+      - delivery
+      - grype
+      - syft
+      - gitleaks
+      - cosign-crane
+      - gatecheck
+      - s3upload
+      - oras
+      - semgrep
+      - release-tool
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      IMAGE_NAME: ${{ needs.delivery.outputs.IMAGE_NAME }}
+      TEMPLATE_VERSION: main
+      FETCH_SAST_ARTIFACTS: "false"
+    steps:
+      - uses: actions/checkout@v4.1.0
+      - run: echo "Released ${{ env.IMAGE_NAME }} to GitHub registry..."
+      # TODO: Currently the release is done in the delivery job, but we could move it here to release only if all checks pass

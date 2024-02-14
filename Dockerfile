@@ -1,6 +1,6 @@
-# TODO: clamAV, semgrep
+# TODO: clamAV
 
-FROM artifactory.cloud.cms.gov/docker/golang:alpine3.19 as build
+FROM golang:alpine3.19 as build
 
 ARG GRYPE_VERSION=v0.74.3
 ARG SYFT_VERSION=v0.102.0
@@ -57,11 +57,7 @@ RUN cd oras && \
     make build-linux-amd64 && \
     mv bin/linux/amd64/oras /usr/local/bin/oras
 
-RUN git clone --branch ${WFE_VERSION} --depth=1 --single-branch https://github.com/CMS-Enterprise/batcave-workflow-engine /app/batcave-workflow-engine
-RUN cd batcave-workflow-engine && \
-    go build -ldflags="-s -w" -o /usr/local/bin/workflow-engine ./cmd/workflow-engine
-
-FROM artifactory.cloud.cms.gov/docker/rust:alpine3.19 as build-just
+FROM rust:alpine3.19 as build-just
 
 RUN apk add musl-dev
 RUN cargo install just
@@ -131,7 +127,7 @@ RUN eval "$(opam env)" &&\
     # Sanity check
     /src/semgrep/_build/default/src/main/Main.exe -version
 
-FROM artifactory.cloud.cms.gov/docker/alpine:3.19.0 as final-base
+FROM alpine:3.19.0 as final-base
 
 RUN apk --no-cache add curl jq sqlite-libs git ca-certificates tzdata
 
@@ -147,6 +143,9 @@ LABEL io.artifacthub.package.license="Apache-2.0"
 # Final image in a CI environment, assumes binaries are located in ./bin
 FROM final-base as final-ci
 
+COPY ./bin/semgrep-core /usr/local/bin/semgrep-core
+RUN ln -s semgrep-core /usr/local/bin/osemgrep
+
 COPY ./bin/grype /usr/local/bin/grype
 COPY ./bin/syft /usr/local/bin/syft
 COPY ./bin/gitleaks /usr/local/bin/gitleaks
@@ -157,7 +156,6 @@ COPY ./bin/gatecheck /usr/local/bin/gatecheck
 COPY ./bin/s3upload /usr/local/bin/s3upload
 COPY ./bin/just /usr/local/bin/just
 COPY ./bin/oras /usr/local/bin/oras
-COPY ./bin/workflow-engine /usr/local/bin/workflow-engine
 
 USER omnibus
 
@@ -177,4 +175,3 @@ COPY --from=build /usr/local/bin/release-cli /usr/local/bin/release-cli
 COPY --from=build /usr/local/bin/gatecheck /usr/local/bin/gatecheck
 COPY --from=build /usr/local/bin/s3upload /usr/local/bin/s3upload
 COPY --from=build /usr/local/bin/oras /usr/local/bin/oras
-COPY --from=build /usr/local/bin/workflow-engine /usr/local/bin/workflow-engine
