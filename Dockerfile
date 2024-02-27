@@ -129,7 +129,7 @@ RUN eval "$(opam env)" &&\
 
 FROM alpine:3.19.0 as final-base
 
-RUN apk --no-cache add curl jq sqlite-libs git ca-certificates tzdata
+RUN apk --no-cache add curl jq sqlite-libs git ca-certificates tzdata clamav
 
 WORKDIR /app
 
@@ -145,6 +145,9 @@ FROM final-base as final-ci
 
 COPY ./bin/semgrep-core /usr/local/bin/semgrep-core
 RUN ln -s semgrep-core /usr/local/bin/osemgrep
+
+RUN cp /usr/bin/freshclam /usr/local/bin/freshclam
+RUN cp /usr/bin/clamscan /usr/local/bin/clamscan
 
 COPY ./bin/grype /usr/local/bin/grype
 COPY ./bin/syft /usr/local/bin/syft
@@ -165,6 +168,9 @@ FROM final-base
 COPY --from=build-just /usr/local/cargo/bin/just /usr/local/bin/just
 COPY --from=build-semgrep-core /src/semgrep/_build/default/src/main/Main.exe /usr/local/bin/semgrep-core
 RUN ln -s semgrep-core /usr/local/bin/osemgrep
+
+RUN cp /usr/bin/freshclam /usr/local/bin/freshclam
+RUN cp /usr/bin/clamscan /usr/local/bin/clamscan
 
 COPY --from=build /usr/local/bin/grype /usr/local/bin/grype
 COPY --from=build /usr/local/bin/syft /usr/local/bin/syft
