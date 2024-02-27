@@ -280,6 +280,7 @@ jobs:
       - s3upload
       - oras
       - semgrep
+      - clamav
       - release-tool
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
