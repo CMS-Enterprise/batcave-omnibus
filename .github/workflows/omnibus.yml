@@ -239,6 +239,24 @@ jobs:
           osemgrep --experimental ci --json > ${{ env.ARTIFACT_FOLDER }}/sast/semgrep-sast-report.json || true
           cat ${{ env.ARTIFACT_FOLDER }}/sast/semgrep-sast-report.json
 
+  clamav:
+    needs: [delivery]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      ARTIFACT_FOLDER: ".artifacts"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
+      - name: Test ClamAV
+        run: |
+          mkdir -p ${{ env.ARTIFACT_FOLDER }}/sast/
+          freshclam
+          clamscan --version
+          clamscan -irv --scan-archive=yes --max-filesize=4000M --max-scansize=4000M --stdout . > ${{ env.ARTIFACT_FOLDER }}/sast/clamav-sast-report.txt || true
+          cat ${{ env.ARTIFACT_FOLDER }}/sast/clamav-sast-report.txt
+
   release-tool:
     needs: [delivery]
     runs-on: ubuntu-latest
@@ -262,6 +280,7 @@ jobs:
       - s3upload
       - oras
       - semgrep
+      - clamav
       - release-tool
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
