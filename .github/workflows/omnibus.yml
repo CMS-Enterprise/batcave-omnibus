@@ -164,7 +164,7 @@ jobs:
         # TODO: Add this back in when we have a valid OIDC token
         # cosign sign --identity-token=$(cat /var/run/secrets/eks.amazonaws.com/serviceaccount/token) ${TARGET_IMAGE}
 
-  gatecheck-v1-cli-test:
+  gatecheck:
     needs: [delivery]
     runs-on: ubuntu-latest
     container:
