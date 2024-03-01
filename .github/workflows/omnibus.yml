@@ -177,7 +177,7 @@ jobs:
           export GATECHECK_FF_CLI_V1_ENABLED=1
           gatecheck version
           gatecheck config info
-          grype ${{ env.JUICE_SHOP_IMAGE }} -o json | gatecheck ls
+          grype ${{ env.JUICE_SHOP_IMAGE }} -o json | gatecheck ls -i grype
 
   s3upload:
     needs: [delivery]
