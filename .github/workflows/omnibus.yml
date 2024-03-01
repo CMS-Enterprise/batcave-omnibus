@@ -164,7 +164,7 @@ jobs:
         # TODO: Add this back in when we have a valid OIDC token
         # cosign sign --identity-token=$(cat /var/run/secrets/eks.amazonaws.com/serviceaccount/token) ${TARGET_IMAGE}
 
-  gatecheck:
+  gatecheck-v1-cli-test:
     needs: [delivery]
     runs-on: ubuntu-latest
     container:
@@ -174,8 +174,10 @@ jobs:
         uses: actions/checkout@v4.1.0
       - name: Test Gatecheck
         run: |
+          export GATECHECK_FF_CLI_V1_ENABLED=1
           gatecheck version
           gatecheck config info
+          grype ${{ env.JUICE_SHOP_IMAGE }} -o json | gatecheck ls
 
   s3upload:
     needs: [delivery]
