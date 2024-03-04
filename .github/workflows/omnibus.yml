@@ -169,6 +169,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ${{ needs.delivery.outputs.IMAGE_NAME }}
+    env:
+      IMAGE_NAME: ${{ needs.delivery.outputs.IMAGE_NAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.0
