@@ -240,7 +240,7 @@ jobs:
         run: |
           mkdir -p ${{ env.ARTIFACT_FOLDER }}/sast/
           osemgrep --help
-          osemgrep --experimental ci --json > ${{ env.ARTIFACT_FOLDER }}/sast/semgrep-sast-report.json || true
+          osemgrep --experimental ci --config auto --json > ${{ env.ARTIFACT_FOLDER }}/sast/semgrep-sast-report.json || true
           cat ${{ env.ARTIFACT_FOLDER }}/sast/semgrep-sast-report.json
 
   clamav:
