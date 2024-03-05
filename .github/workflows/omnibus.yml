@@ -250,11 +250,21 @@ jobs:
       image: ${{ needs.delivery.outputs.IMAGE_NAME }}
     env:
       ARTIFACT_FOLDER: ".artifacts"
+    services:
+      clamav-cvd-server:
+        image: artifactory.cloud.cms.gov/batcave-docker/devops-pipelines/pipeline-tools/clamav-cvd-server:latest
+        ports:
+          - 8082:8082
+        options: >-
+          cvd
+          serve
+          8082
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.0
       - name: Test ClamAV
         run: |
+          sed -i 's|DatabaseMirror database.clamav.net|DatabaseMirror http://cvd-server:8082|g' /etc/clamav/freshclam.conf
           mkdir -p ${{ env.ARTIFACT_FOLDER }}/sast/
           freshclam
           clamscan --version
