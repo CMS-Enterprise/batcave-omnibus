@@ -238,9 +238,10 @@ jobs:
         uses: actions/checkout@v4.1.0
       - name: Test Semgrep
         run: |
+          git config --global --add safe.directory /__w/batcave-omnibus/batcave-omnibus
           mkdir -p ${{ env.ARTIFACT_FOLDER }}/sast/
           osemgrep --help
-          osemgrep --experimental ci --json > ${{ env.ARTIFACT_FOLDER }}/sast/semgrep-sast-report.json || true
+          osemgrep ci --experimental --config auto --config p/owasp-top-ten --json > ${{ env.ARTIFACT_FOLDER }}/sast/semgrep-sast-report.json || true
           cat ${{ env.ARTIFACT_FOLDER }}/sast/semgrep-sast-report.json
 
   clamav:

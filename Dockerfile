@@ -103,7 +103,7 @@ RUN cargo install just
 
 FROM returntocorp/ocaml:alpine-2023-10-17 as build-semgrep-core
 
-ARG SEMGREP_VERSION=v1.56.0
+ARG SEMGREP_VERSION=v1.45.0
 
 WORKDIR /src
 
