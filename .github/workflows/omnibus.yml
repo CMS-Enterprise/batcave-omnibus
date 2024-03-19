@@ -42,12 +42,19 @@ jobs:
           tag: ${{ env.IMAGE_NAME }}
           artifact_dir: ./artifacts
 
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Image Publish
         env:
           OUT_ARTIFACT_DIR: ${{ github.workspace }}/artifacts
           WFE_IMAGE_PUBLISH_BUNDLE_PUBLISH_ENABLED: 0
         shell: sh
         run: |-
+          docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
           workflow-engine run image-publish --tag ${{ env.IMAGE_NAME }}
 
       - name: Archive image scan outputs
