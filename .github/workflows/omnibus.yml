@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       IMAGE_NAME: ${{ steps.output.outputs.IMAGE_NAME }}
+      BUNDLE_IMAGE_NAME: ${{ steps.output.outputs.BUNDLE_IMAGE_NAME }}
     steps:
       - uses: actions/checkout@v4
 
@@ -27,38 +28,25 @@ jobs:
             echo "IMAGE_NAME=${{ vars.BC_IMAGE_REPO }}/batcave/omnibus:latest" >> $GITHUB_ENV
           fi
 
-      # TODO combine all delivery jobs into a single action
-      - name: Build container image
+      - name: Image Build
         uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-build@main
         with:
-          path: .
-          # TODO: the dockerfile path should be relative to the context path
           dockerfile: ./Dockerfile
-          # TODO: add support for mixed case to workflow-engine (i.e. we should force container image tags to lowercase)
-          image_tag: ${{ env.IMAGE_NAME }}
-          # cache_from: ./container-cache-in
-          # cache_to: ./container-cache-out
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ env.IMAGE_NAME }}
 
-      # - name: Save image layer cache
-      #   uses: actions/cache/save@v4
-      #   with:
-      #     path: ./container-cache-out
-      #     key: layers-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('Dockerfile') }}
-
-      - name: Scan container image
+      - name: Image Scan
         uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-scan@main
         with:
-          image_tag: ${{ env.IMAGE_NAME }}
-          output_dir: ./artifacts
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ env.IMAGE_NAME }}
+          artifact_dir: ./artifacts
 
-      # TODO: this should be something workflow-engine does as apart of the delivery pipeline
-      - name: Push image
-        # TODO: in the future push based on protected git tags, and move to release stage
-        # if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        shell: bash
-        run: docker push ${{ env.IMAGE_NAME }}
+      - name: Image Publish
+        env:
+          OUT_ARTIFACT_DIR: ${{ github.workspace }}/artifacts
+          WFE_IMAGE_PUBLISH_BUNDLE_PUBLISH_ENABLED: 0
+        shell: sh
+        run: |-
+          workflow-engine run image-publish --tag ${{ env.IMAGE_NAME }}
 
       - name: Archive image scan outputs
         uses: actions/upload-artifact@v4
