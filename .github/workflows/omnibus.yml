@@ -19,17 +19,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # In order to support caching we need to make sure we are using the docker-container driver for builds
-      # - name: Restore image layer cache
-      #   uses: actions/cache/restore@v4
-      #   with:
-      #     path: ./container-cache-in
-      #     key: ${{ runner.os }}-
-      #     restore-keys: |
-      #       layers-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('Dockerfile') }}
-      #       layers-${{ runner.os }}-${{ github.ref }}
-      #       layers-${{ runner.os }}
-
       - name: Set up the environment
         run: |
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
@@ -176,7 +165,6 @@ jobs:
         uses: actions/checkout@v4.1.0
       - name: Test Gatecheck
         run: |
-          export GATECHECK_FF_CLI_V1_ENABLED=1
           gatecheck version
           gatecheck config info
           grype ${{ env.JUICE_SHOP_IMAGE }} -o json | gatecheck ls -i grype
