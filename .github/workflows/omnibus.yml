@@ -14,6 +14,8 @@ on:
 jobs:
   delivery:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cms-enterprise/batcave/workflow-engine:2ed88c3b
     outputs:
       IMAGE_NAME: ${{ steps.output.outputs.IMAGE_NAME }}
       BUNDLE_IMAGE_NAME: ${{ steps.output.outputs.BUNDLE_IMAGE_NAME }}
