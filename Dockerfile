@@ -1,5 +1,3 @@
-# TODO: clamAV
-
 FROM golang:alpine3.19 as build
 
 ARG GRYPE_VERSION=v0.74.3
@@ -133,7 +131,7 @@ RUN eval "$(opam env)" &&\
     # Sanity check
     /src/semgrep/_build/default/src/main/Main.exe -version
 
-FROM alpine:3.19.0 as final-base
+FROM alpine:3.19.1
 
 RUN apk --no-cache add curl jq sqlite-libs git ca-certificates tzdata clamav
 
@@ -141,42 +139,13 @@ WORKDIR /app
 
 LABEL org.opencontainers.image.title="omnibus"
 LABEL org.opencontainers.image.description="A collection of CI/CD tools for batCAVE"
-LABEL org.opencontainers.image.vendor="nightwing"
+LABEL org.opencontainers.image.vendor="CMS batCAVE - Pipeline Team"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
-LABEL io.artifacthub.package.readme-url="https://code.batcave.internal.cms.gov/devops-pipelines/pipeline-tools/omnibus/-/blob/main/README.md"
+LABEL io.artifacthub.package.readme-url="https://raw.githubusercontent.com/CMS-Enterprise/batcave-omnibus/main/README.md"
 LABEL io.artifacthub.package.license="Apache-2.0"
 
-# Final image in a CI environment, assumes binaries are located in ./bin
-FROM final-base as final-ci
-
-COPY ./bin/semgrep-core /usr/local/bin/semgrep-core
-RUN ln -s semgrep-core /usr/local/bin/osemgrep
-
-RUN cp /usr/bin/freshclam /usr/local/bin/freshclam
-RUN cp /usr/bin/clamscan /usr/local/bin/clamscan
-
-COPY ./bin/grype /usr/local/bin/grype
-COPY ./bin/syft /usr/local/bin/syft
-COPY ./bin/gitleaks /usr/local/bin/gitleaks
-COPY ./bin/cosign /usr/local/bin/cosign
-COPY ./bin/crane /usr/local/bin/crane
-COPY ./bin/release-cli /usr/local/bin/release-cli
-COPY ./bin/gatecheck /usr/local/bin/gatecheck
-COPY ./bin/s3upload /usr/local/bin/s3upload
-COPY ./bin/just /usr/local/bin/just
-COPY ./bin/oras /usr/local/bin/oras
-
-USER omnibus
-
-# Final image if building locally and build dependencies are needed
-FROM final-base
-
 COPY --from=build-just /usr/local/cargo/bin/just /usr/local/bin/just
-COPY --from=build-semgrep-core /src/semgrep/_build/default/src/main/Main.exe /usr/local/bin/semgrep-core
-RUN ln -s semgrep-core /usr/local/bin/osemgrep
-
-RUN cp /usr/bin/freshclam /usr/local/bin/freshclam
-RUN cp /usr/bin/clamscan /usr/local/bin/clamscan
+COPY --from=build-semgrep-core /src/semgrep/_build/default/src/main/Main.exe /usr/local/bin/osemgrep
 
 COPY --from=build /usr/local/bin/grype /usr/local/bin/grype
 COPY --from=build /usr/local/bin/syft /usr/local/bin/syft
@@ -185,5 +154,7 @@ COPY --from=build /usr/local/bin/cosign /usr/local/bin/cosign
 COPY --from=build /usr/local/bin/crane /usr/local/bin/crane
 COPY --from=build /usr/local/bin/release-cli /usr/local/bin/release-cli
 COPY --from=build /usr/local/bin/gatecheck /usr/local/bin/gatecheck
+COPY --from=build /usr/local/bin/shout /usr/local/bin/shout
 COPY --from=build /usr/local/bin/s3upload /usr/local/bin/s3upload
 COPY --from=build /usr/local/bin/oras /usr/local/bin/oras
+
