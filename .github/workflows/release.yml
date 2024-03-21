@@ -23,18 +23,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set outputs
-        id: vars
-        run: |
-          echo "tag_name=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT 
-          if [[ $GITHUB_REF == refs/tags/v* ]]; then
-            echo "tag_name=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
-          fi
-
       - run: |
           docker buildx imagetools create \
             --tag ghcr.io/cms-enterprise/batcave/omnibus:${{ github.ref_name }} \
-            ghcr.io/cms-enterprise/batcave/omnibus:${{ steps.vars.outputs.tag_name }}
+            ghcr.io/cms-enterprise/batcave/omnibus:${GITHUB_SHA::8}
 
       - run: |
           gh release create ${{ github.ref_name }} --generate-notes
