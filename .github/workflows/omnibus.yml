@@ -32,9 +32,9 @@ jobs:
       - name: Set outputs
         id: vars
         run: |
-          echo "tag_name=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT 
+          echo "IMAGE_NAME=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT 
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
-            echo "tag_name=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+            echo "IMAGE_NAME=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
           fi
           echo "VERSION=$(git describe --tags)" >> $GITHUB_ENV
           echo "GIT_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
@@ -44,14 +44,14 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ghcr.io/cms-enterprise/batcave/omnibus:${{ steps.vars.outputs.tag_name }}
+          tags: ghcr.io/cms-enterprise/batcave/omnibus:${{ steps.vars.outputs.IMAGE_NAME }}
 
       - name: job summary
         shell: bash
         run: |
           echo "## Docker Action Image Build and Push Summary" >> $GITHUB_STEP_SUMMARY
           echo ":white_check_mark: Docker Action Image Build and Push" >> $GITHUB_STEP_SUMMARY
-          echo ":white_check_mark: Image (Docker CLI): ghcr.io/cms-enterprise/batcave/omnibus:${{ steps.vars.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
+          echo ":white_check_mark: Image (Docker CLI): ghcr.io/cms-enterprise/batcave/omnibus:${{ steps.vars.outputs.IMAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
 
   grype:
     needs: [delivery]
