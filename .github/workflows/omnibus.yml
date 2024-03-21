@@ -12,35 +12,14 @@ on:
       - main
 
 jobs:
-  delivery:
+  build-image:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/cms-enterprise/batcave/workflow-engine:2ed88c3b
-    outputs:
-      IMAGE_NAME: ${{ steps.output.outputs.IMAGE_NAME }}
-      BUNDLE_IMAGE_NAME: ${{ steps.output.outputs.BUNDLE_IMAGE_NAME }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-      - name: Set up the environment
-        run: |
-          if [[ $GITHUB_REF == refs/tags/v* ]]; then
-            echo "IMAGE_NAME=${{ vars.BC_IMAGE_REPO }}/batcave/omnibus:$GITHUB_REF_NAME" >> $GITHUB_ENV
-          else
-            echo "IMAGE_NAME=${{ vars.BC_IMAGE_REPO }}/batcave/omnibus:latest" >> $GITHUB_ENV
-          fi
-
-      - name: Image Build
-        uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-build@main
-        with:
-          dockerfile: ./Dockerfile
-          tag: ${{ env.IMAGE_NAME }}
-
-      - name: Image Scan
-        uses: CMS-Enterprise/batcave-workflow-engine/.github/actions/image-scan@main
-        with:
-          tag: ${{ env.IMAGE_NAME }}
-          artifact_dir: ./artifacts
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - uses: docker/login-action@v3
         with:
@@ -48,26 +27,29 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Image Publish
-        env:
-          OUT_ARTIFACT_DIR: ${{ github.workspace }}/artifacts
-          WFE_IMAGE_PUBLISH_BUNDLE_PUBLISH_ENABLED: 0
-        shell: sh
-        run: |-
-          docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-          workflow-engine run image-publish --tag ${{ env.IMAGE_NAME }}
-
-      - name: Archive image scan outputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: image-scan-results
-          path: ./artifacts/*.json
-          if-no-files-found: error
-
-      - id: output
+      - name: Set outputs
+        id: vars
         run: |
-          echo "IMAGE_NAME=${{ env.IMAGE_NAME }}"
-          echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
+          echo "tag_name=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT 
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+            echo "tag_name=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+          fi
+          echo "VERSION=$(git describe --tags)" >> $GITHUB_ENV
+          echo "GIT_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
+          echo "GIT_DESCRIPTION=$(git log -1 --pretty=%B | head -n 1)" >> $GITHUB_ENV
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: ghcr.io/cms-enterprise/batcave/omnibus:${{ steps.vars.outputs.tag_name }}
+
+      - name: job summary
+        shell: bash
+        run: |
+          echo "## Docker Action Image Build and Push Summary" >> $GITHUB_STEP_SUMMARY
+          echo ":white_check_mark: Docker Action Image Build and Push" >> $GITHUB_STEP_SUMMARY
+          echo ":white_check_mark: Image (Docker CLI): ghcr.io/cms-enterprise/batcave/omnibus:${{ steps.vars.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
 
   grype:
     needs: [delivery]
@@ -246,41 +228,3 @@ jobs:
           clamscan --version
           clamscan -irv --scan-archive=yes --max-filesize=4000M --max-scansize=4000M --stdout . > ${{ env.ARTIFACT_FOLDER }}/sast/clamav-sast-report.txt || true
           cat ${{ env.ARTIFACT_FOLDER }}/sast/clamav-sast-report.txt
-
-  release-tool:
-    needs: [delivery]
-    runs-on: ubuntu-latest
-    container:
-      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
-    steps:
-      - name: Release Omnibus
-        run: |
-          echo "Releasing Omnibus..."
-        # TODO: Figure out equivalent release tool for GitHub Actions
-        # gh help
-
-  release-github:
-    needs:
-      - delivery
-      - grype
-      - syft
-      - gitleaks
-      - cosign-crane
-      - gatecheck
-      - s3upload
-      - oras
-      - semgrep
-      - clamav
-      - release-tool
-    runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-    container:
-      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
-    env:
-      IMAGE_NAME: ${{ needs.delivery.outputs.IMAGE_NAME }}
-      TEMPLATE_VERSION: main
-      FETCH_SAST_ARTIFACTS: "false"
-    steps:
-      - uses: actions/checkout@v4.1.0
-      - run: echo "Released ${{ env.IMAGE_NAME }} to GitHub registry..."
-      # TODO: Currently the release is done in the delivery job, but we could move it here to release only if all checks pass
