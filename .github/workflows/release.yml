@@ -27,10 +27,15 @@ jobs:
         id: vars
         run: |
           echo "tag_name=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT 
+
       - run: |
-          docker buildx imagetools create \
-            --tag ghcr.io/cms-enterprise/batcave/omnibus:${{ github.ref_name }} \
-            ghcr.io/cms-enterprise/batcave/omnibus:${{ steps.vars.outputs.tag_name }}
+          export SRC_IMAGE=ghcr.io/cms-enterprise/batcave/omnibus:${{ steps.vars.outputs.tag_name }}
+          export DST_IMAGE=ghcr.io/cms-enterprise/batcave/omnibus:${{ github.ref_name }}
+          echo "src image: $SRC_IMAGE"
+          echo "dst image: $DST_IMAGE"
+          docker pull $SRC_IMAGE
+          docker tag $SRC_IMAGE $DST_IMAGE
+          docker push $DST_IMAGE
 
       - run: |
           gh release create ${{ github.ref_name }} --generate-notes
