@@ -14,6 +14,8 @@ on:
 jobs:
   delivery:
     runs-on: ubuntu-latest
+    outputs:
+      IMAGE_NAME: ghcr.io/cms-enterprise/batcave/omnibus:${{steps.vars.outputs.tag_name}}
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -32,9 +34,9 @@ jobs:
       - name: Set outputs
         id: vars
         run: |
-          echo "IMAGE_NAME=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT 
+          echo "tag_name=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT 
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
-            echo "IMAGE_NAME=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+            echo "tag_name=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
           fi
           echo "VERSION=$(git describe --tags)" >> $GITHUB_ENV
           echo "GIT_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
@@ -44,14 +46,14 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ghcr.io/cms-enterprise/batcave/omnibus:${{ steps.vars.outputs.IMAGE_NAME }}
+          tags: ghcr.io/cms-enterprise/batcave/omnibus:${{ steps.vars.outputs.tag_name }}
 
       - name: job summary
         shell: bash
         run: |
           echo "## Docker Action Image Build and Push Summary" >> $GITHUB_STEP_SUMMARY
           echo ":white_check_mark: Docker Action Image Build and Push" >> $GITHUB_STEP_SUMMARY
-          echo ":white_check_mark: Image (Docker CLI): ghcr.io/cms-enterprise/batcave/omnibus:${{ steps.vars.outputs.IMAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo ":white_check_mark: Image (Docker CLI): ghcr.io/cms-enterprise/batcave/omnibus:${{ steps.vars.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
 
   grype:
     needs: [delivery]
@@ -63,8 +65,6 @@ jobs:
       GRYPE_CACHE_IMAGE: "${{ vars.BC_IMAGE_REPO }}/batcave/grype-vulndb-cache:latest"
       JUICE_SHOP_IMAGE: "bkimminich/juice-shop"
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
       - name: Test Grype
         run: |
           grype version
@@ -149,29 +149,6 @@ jobs:
           gatecheck version
           gatecheck config info
           grype ${{ env.JUICE_SHOP_IMAGE }} -o json | gatecheck ls -i grype
-
-  s3upload:
-    needs: [delivery]
-    runs-on: ubuntu-latest
-    container:
-      image: ${{ needs.delivery.outputs.IMAGE_NAME }}
-    env:
-      AWS_PROFILE: "${{ secrets.BC_AWS_PROFILE_PROD }}"
-      AWS_REGION: "us-east-1"
-      AWS_BUCKET: "${{ secrets.BC_AWS_SECURITY_SCANS_STORAGE_BUCKET_PROD }}"
-      PRODUCT: "${{ github.event.repository.name }}"
-      ENGAGEMENT: "${{ github.event.repository.name }}_pipeline_${{ github.repository}}"
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4.1.0
-      - name: Test S3 Upload
-        run: |
-          export EXPORT_DATE=$(date -u +"%Y%m%d")
-          export S3_KEY=${EXPORT_DATE}/${{ env.PRODUCT }}/${{ env.ENGAGEMENT }}
-          echo "Omnibus Smoke Test - Ignore" > file-1.txt
-          ls -la
-        # TODO: Add this back in when we have a valid AWS profile
-        # s3upload -f file-1.txt -b ${{ env.AWS_BUCKET }} -k ${S3_KEY}
 
   oras:
     needs: [delivery]
