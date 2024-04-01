@@ -2,7 +2,8 @@ name: Build and Test Omnibus
 run-name: "Building Omnibus Image: ${{ github.event.head_commit.message }}"
 on:
   push:
-  pull_request:
+    branches:
+      - "**"
 
 jobs:
   delivery:
