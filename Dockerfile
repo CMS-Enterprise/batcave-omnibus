@@ -8,7 +8,7 @@ ARG GITLEAKS_VERSION=v8.18.2
 ARG COSIGN_VERSION=v2.2.3
 ARG CRANE_VERSION=v0.19.1
 ARG RELEASE_CLI_VERSION=v0.16.0
-ARG GATECHECK_VERSION=v0.4.1
+ARG GATECHECK_VERSION=v0.5.0
 ARG S3UPLOAD_VERSION=v1.0.4
 ARG ORAS_VERSION=v1.1.0
 ARG SHOUT_VERSION=v0.1.1
@@ -159,4 +159,3 @@ COPY --from=build /usr/local/bin/gatecheck /usr/local/bin/gatecheck
 COPY --from=build /usr/local/bin/shout /usr/local/bin/shout
 COPY --from=build /usr/local/bin/s3upload /usr/local/bin/s3upload
 COPY --from=build /usr/local/bin/oras /usr/local/bin/oras
-
