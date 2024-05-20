@@ -28,7 +28,7 @@ jobs:
       - name: Set outputs
         id: vars
         run: |
-          echo "tag_name=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT 
+          echo "tag_name=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             echo "tag_name=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
           fi
@@ -141,8 +141,9 @@ jobs:
       - name: Test Gatecheck
         run: |
           gatecheck version
-          gatecheck config info
-          grype ${{ env.JUICE_SHOP_IMAGE }} -o json | gatecheck ls -i grype
+          gatecheck config init
+          echo "# Juice Shop Grype Scan Results" >> $GITHUB_STEP_SUMMARY
+          grype ${{ env.JUICE_SHOP_IMAGE }} -o json | gatecheck ls -i grype --epss --markdown >> $GITHUB_STEP_SUMMARY
 
   oras:
     needs: [delivery]
