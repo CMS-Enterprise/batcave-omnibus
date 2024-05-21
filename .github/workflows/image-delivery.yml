@@ -141,7 +141,7 @@ jobs:
       - name: Test Gatecheck
         run: |
           gatecheck version
-          gatecheck config init -o yaml
+          gatecheck config init --output yaml
           echo "# Juice Shop Grype Scan Results" >> $GITHUB_STEP_SUMMARY
           grype ${{ env.JUICE_SHOP_IMAGE }} -o json | gatecheck ls -i grype --epss --markdown >> $GITHUB_STEP_SUMMARY
 
