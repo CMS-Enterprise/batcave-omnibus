@@ -1,16 +1,16 @@
-FROM golang:alpine3.19 as build
+FROM golang:alpine3.20 as build
 
 # Link to All Apps https://arc.net/folder/40C7B38D-FE7B-4DCE-BEF2-49C652757741
 
-ARG GRYPE_VERSION=v0.77.4
-ARG SYFT_VERSION=v1.4.1
-ARG GITLEAKS_VERSION=v8.18.2
+ARG GRYPE_VERSION=v0.78.0
+ARG SYFT_VERSION=v1.5.0
+ARG GITLEAKS_VERSION=v8.18.3
 ARG COSIGN_VERSION=v2.2.4
 ARG CRANE_VERSION=v0.19.1
 ARG RELEASE_CLI_VERSION=v0.18.0
-ARG GATECHECK_VERSION=v0.7.2
+ARG GATECHECK_VERSION=v0.7.3
 ARG S3UPLOAD_VERSION=v1.0.4
-ARG ORAS_VERSION=v1.1.0
+ARG ORAS_VERSION=v1.2.0
 ARG SHOUT_VERSION=v0.1.1
 
 RUN apk --no-cache add ca-certificates git make
@@ -63,7 +63,7 @@ RUN cd /app/oras && \
     make build-linux-amd64 && \
     mv bin/linux/amd64/oras /usr/local/bin/oras
 
-FROM rust:alpine3.19 as build-just
+FROM rust:alpine3.20 as build-just
 
 RUN apk add musl-dev
 RUN cargo install just
@@ -108,9 +108,9 @@ RUN cargo install just
 # coupling: if you modify the FROM below, you probably need to modify also
 # a few .github/workflows/ files. grep for returntocorp/ocaml there.
 
-FROM returntocorp/ocaml:alpine-2023-10-17 as build-semgrep-core
+FROM returntocorp/ocaml:alpine as build-semgrep-core
 
-ARG SEMGREP_VERSION=v1.72.0
+ARG SEMGREP_VERSION=v1.75.0
 
 WORKDIR /src
 
@@ -133,7 +133,7 @@ RUN eval "$(opam env)" &&\
     # Sanity check
     /src/semgrep/_build/default/src/main/Main.exe -version
 
-FROM alpine:3.19.1
+FROM alpine:3.20
 
 RUN apk --no-cache add curl jq sqlite-libs git ca-certificates tzdata clamav
 
