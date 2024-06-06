@@ -108,28 +108,32 @@ RUN cargo install just
 # coupling: if you modify the FROM below, you probably need to modify also
 # a few .github/workflows/ files. grep for returntocorp/ocaml there.
 
-FROM returntocorp/ocaml:alpine as build-semgrep-core
+FROM alpine:3.19 as build-semgrep-core
 
-ARG SEMGREP_VERSION=v1.75.0
+ARG SEMGREP_VERSION=v1.73.0
 
 WORKDIR /src
 
-RUN apk add --no-cache git make
+RUN apk add --no-cache bash build-base git make opam
+
+RUN opam init --disable-sandboxing && \
+    opam switch create 4.14.0
 
 RUN git clone --recurse-submodules --branch ${SEMGREP_VERSION} --depth=1 --single-branch https://github.com/semgrep/semgrep /src/semgrep
 
 WORKDIR /src/semgrep
 
-RUN make install-deps-ALPINE-for-semgrep-core &&\
-    make install-deps-for-semgrep-core
-
-COPY Makefile.semgrep .
+# note that we do not run 'make install-deps-for-semgrep-core' here because it
+# configures and builds ocaml-tree-sitter-core too; here we are
+# just concerned about installing external packages to maximize docker caching.
+RUN make install-deps-ALPINE-for-semgrep-core
+RUN make install-opam-deps
+RUN make install-deps-for-semgrep-core
 
 # Let's build just semgrep-core
-# Note: I'm not sure that using dune --release actually makes an appreciable difference
-# The binary is the same size, and I haven't tested the result when building without --release
-RUN eval "$(opam env)" &&\
-    make -f Makefile.semgrep release-build &&\
+#alt: use 'opam exec -- ...' instead of eval
+RUN eval "$(opam env)" && \
+    make minimal-build && \
     # Sanity check
     /src/semgrep/_build/default/src/main/Main.exe -version
 
