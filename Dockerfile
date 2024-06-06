@@ -112,30 +112,29 @@ FROM alpine:3.19 as build-semgrep-core
 
 ARG SEMGREP_VERSION=v1.75.0
 
-WORKDIR /src
-
 RUN apk add --no-cache bash build-base git make opam
 
 RUN opam init --disable-sandboxing && \
     opam switch create 4.14.0
 
-RUN git clone --recurse-submodules --branch ${SEMGREP_VERSION} --depth=1 --single-branch https://github.com/semgrep/semgrep /src/semgrep
-
 WORKDIR /src/semgrep
+
+RUN git clone --recurse-submodules --branch ${SEMGREP_VERSION} --depth=1 --single-branch https://github.com/semgrep/semgrep . && \
+    rm -rf ./.git
 
 # note that we do not run 'make install-deps-for-semgrep-core' here because it
 # configures and builds ocaml-tree-sitter-core too; here we are
 # just concerned about installing external packages to maximize docker caching.
-RUN make install-deps-ALPINE-for-semgrep-core
-RUN make install-opam-deps
-RUN make install-deps-for-semgrep-core
-
-# Let's build just semgrep-core
-#alt: use 'opam exec -- ...' instead of eval
-RUN eval "$(opam env)" && \
+RUN make install-deps-ALPINE-for-semgrep-core && \
+    make install-opam-deps && \
+    make install-deps-for-semgrep-core && \
+    eval "$(opam env)" && \
     make minimal-build && \
+    mkdir ./dist && \
+    mv /src/semgrep/_build/default/src/main/Main.exe /src/semgrep/dist/semgrep-core && \
+    rm -rf /root/.opam /src/semgrep/_build  && \
     # Sanity check
-    /src/semgrep/_build/default/src/main/Main.exe -version
+    /src/semgrep/dist/semgrep-core -version
 
 FROM alpine:3.20
 
@@ -151,7 +150,7 @@ LABEL io.artifacthub.package.readme-url="https://raw.githubusercontent.com/CMS-E
 LABEL io.artifacthub.package.license="Apache-2.0"
 
 COPY --from=build-just /usr/local/cargo/bin/just /usr/local/bin/just
-COPY --from=build-semgrep-core /src/semgrep/_build/default/src/main/Main.exe /usr/local/bin/osemgrep
+COPY --from=build-semgrep-core /src/semgrep/dist/semgrep-core /usr/local/bin/osemgrep
 
 COPY --from=build /usr/local/bin/grype /usr/local/bin/grype
 COPY --from=build /usr/local/bin/syft /usr/local/bin/syft
