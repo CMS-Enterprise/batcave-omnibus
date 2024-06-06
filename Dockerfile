@@ -110,7 +110,7 @@ RUN cargo install just
 
 FROM alpine:3.19 as build-semgrep-core
 
-ARG SEMGREP_VERSION=v1.73.0
+ARG SEMGREP_VERSION=v1.75.0
 
 WORKDIR /src
 
